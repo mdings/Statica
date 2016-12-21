@@ -1,5 +1,6 @@
 const chokidar = require('chokidar')
 const browserify = require('browserify')
+const postcss = require('postcss')
 const sass = require('node-sass')
 const fs = require('fs')
 const mkdirp = require('mkdirp')
@@ -209,16 +210,21 @@ class Project {
 
                 } else {
 
-                    mkdirp(paths.outDir, (e) => {
+                    postcss([require('autoprefixer')])
+                    .process(result.css)
+                    .then(output => {
 
-                        if (e) throw new e
+                        // write the outpout to file
+                        mkdirp(paths.outDir, (e) => {
 
-                        fs.writeFileSync(paths.outFile, result.css, 'utf-8')
-                        this.bs.reload(true)
-                    })
+                            if (e) throw new e
+
+                            fs.writeFileSync(paths.outFile, output.css, 'utf-8')
+                            this.bs.reload(true)
+                        })
+                    });
                 }
             })
-
         })
     }
 
