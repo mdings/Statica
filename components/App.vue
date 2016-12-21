@@ -1,7 +1,7 @@
 <template>
-    <main>
+    <main @dragover="showDropArea">
         <Project v-for="project in projects" :project="project"></Project>
-        <button @click="addProject">Add</button>
+        <button @click="openDialog">Add</button>
         <button @click="clearStorage">Clear</button>
     </main>
 </template>
@@ -10,6 +10,7 @@
 
     import Project from './Project.vue'
 
+    const fs = require('fs')
     const {ipcRenderer} = require('electron')
     const {dialog} = require('electron').remote
     const storage = require('electron-json-storage')
@@ -22,6 +23,12 @@
         },
 
         created() {
+
+            document.body.ondrop = (e) => {
+
+                this.addProject(e.dataTransfer.files[0].path)
+                e.preventDefault()
+            }
 
             storage.get('projects', (e, result) => {
 
@@ -68,8 +75,39 @@
                 })
             },
 
+            showDropArea(e) {
 
-            addProject() {
+                console.log('ok dropping')
+                e.preventDefault()
+            },
+
+            addProject(folder) {
+
+                // check if the added path is actually a directory
+                // @TODO: fail gracefully
+                if (fs.lstatSync(folder).isDirectory()) {
+                    
+                    const project = {
+
+                        id: require('shortid').generate(),
+                        name: folder,
+                        path: folder,
+                        isRunning: false
+                    }
+
+                    this.projects.push(project)
+
+                    ipcRenderer.send('create-project', project)
+
+                    //@TODO: move this to the background window
+                    storage.set('projects', this.projects, (e) => {
+
+                        if (e) throw e
+                    })
+                }
+            },
+
+            openDialog() {
 
                 dialog.showOpenDialog({
 
@@ -77,22 +115,7 @@
 
                 }, (filePaths) => {
 
-                    const project = {
-
-                        id: require('shortid').generate(),
-                        name: filePaths[0],
-                        path: filePaths[0],
-                        isRunning: false
-                    }
-
-                    ipcRenderer.send('create-project', project)
-
-                    this.projects.push(project)
-
-                    storage.set('projects', this.projects, (e) => {
-
-                        if (e) throw e
-                    })
+                    this.addProject(filePaths[0])
                 })
             }
         }
@@ -109,6 +132,6 @@
         margin: 0;
         padding: 0;
         outline: none;
+        box-sizing: border-box;
     }
-
 </style>
