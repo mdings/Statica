@@ -1,10 +1,9 @@
 const chokidar = require('chokidar')
 const browserify = require('browserify')
-const notifier = require('electron-notifications')
 const sass = require('node-sass')
 const fs = require('fs')
 const mkdirp = require('mkdirp')
-const {app} = require('electron')
+const {app} = require('electron').remote
 const pug = require('pug')
 
 const has_ = (file) => {
@@ -128,6 +127,8 @@ class Project {
             this.bs.init({
                 server: this.base
              });
+
+             console.log(this.bs)
 
         }
     }

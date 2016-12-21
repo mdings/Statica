@@ -1,14 +1,12 @@
 const {ipcMain,app, BrowserWindow} = require('electron')
 
-const Project = require('./project')
 const path = require('path')
 const url = require('url')
-
-const projects = []
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 let mainWindow
+let bgWindow 
 
 function createWindow () {
 
@@ -16,21 +14,35 @@ function createWindow () {
     mainWindow = new BrowserWindow({
         width: 800,
         height: 600,
-        resizable: false,
         webPreferences: {
 
             scrollBounce: true
-      }
-})
+        }
+    })
 
-// and load the index.html of the app.
-mainWindow.loadURL(url.format({
+    bgWindow = new BrowserWindow({
+        width: 300,
+        height: 300
+    })
 
-    pathname: path.join(__dirname, 'index.html'),
+    bgWindow.loadURL(url.format({
 
-        protocol: 'file:',
-        slashes: true
-    }))
+        pathname: path.join(__dirname, 'worker.html'),
+
+            protocol: 'file:',
+            slashes: true
+        }))
+
+    bgWindow.webContents.openDevTools()
+
+    // and load the index.html of the app.
+    mainWindow.loadURL(url.format({
+
+        pathname: path.join(__dirname, 'index.html'),
+
+            protocol: 'file:',
+            slashes: true
+        }))
 
     // Open the DevTools.
     mainWindow.webContents.openDevTools()
@@ -42,6 +54,7 @@ mainWindow.loadURL(url.format({
         // in an array if your app supports multi windows, this is the time
         // when you should delete the corresponding element.
         mainWindow = null
+        bgWindow = null
     })
 }
 
@@ -70,25 +83,13 @@ app.on('activate', function () {
     }
 })
 
-// In this file you can include the rest of your app's specific main process
-// code. You can also put them in separate files and require them here.
+// communications
 ipcMain.on('create-project', (e, project) => {
-
-    const p = new Project(project)
-    p.mainWindow = mainWindow
-
-    projects.push(p)
+    
+    bgWindow.webContents.send('create-project', project)
 })
 
 ipcMain.on('start-server', (e, id) => {
 
-    const p = projects.find((item) => {
-
-      return item.id == id
-    })
-
-    if(p) {
-
-      p.start()
-    }
+    bgWindow.webContents.send('start-server', id)
 })
