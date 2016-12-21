@@ -134,4 +134,10 @@
         outline: none;
         box-sizing: border-box;
     }
+
+    main {
+
+        min-height: 100vh;
+    }
+
 </style>
