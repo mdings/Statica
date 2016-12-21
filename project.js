@@ -1,3 +1,4 @@
+const {ipcRenderer} = require('electron')
 const chokidar = require('chokidar')
 const browserify = require('browserify')
 const postcss = require('postcss')
@@ -64,7 +65,7 @@ class Project {
         // @TODO: ignore dot files, node_modules and bower_components
         const watcher = chokidar.watch(this.path, {
 
-            ignored: /(((^|[\/\\])\..)|node_module|bower_components)/,
+            ignored: /(((^|[\/\\])\..)|node_modules|bower_components|build)/,
             persistent: true
         })
 
@@ -126,6 +127,9 @@ class Project {
         if(!this.bs.active) {
 
             this.bs.init({
+
+                notify: false,
+                ui: false,
                 server: this.base
              });
 
@@ -168,7 +172,7 @@ class Project {
 
                 if(e) {
 
-                    this.mainWindow.webContents.send('notify', e.message)
+                    ipcRenderer.send('notify', e.message)
 
                 } else {
 
@@ -206,7 +210,7 @@ class Project {
 
                 if (e) {
 
-                    this.mainWindow.webContents.send('notify', e.message)
+                    ipcRenderer.send('notify', e.message)
 
                 } else {
 

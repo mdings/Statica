@@ -93,3 +93,8 @@ ipcMain.on('start-server', (e, id) => {
 
     bgWindow.webContents.send('start-server', id)
 })
+
+ipcMain.on('notify', (e, message) => {
+
+    mainWindow.webContents.send('notify', message)
+})
