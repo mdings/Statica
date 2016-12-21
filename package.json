@@ -4,7 +4,6 @@
   "description": "A minimal Electron application",
   "main": "main.js",
   "scripts": {
-    // copy the custom build to the appropriate folder when done installing
     "postinstall": "copyfiles darwin-x64-50/* node_modules/node-sass/vendor",
     "dev": "cross-env NODE_ENV=development webpack-dev-server --inline --hot",
     "build": "cross-env NODE_ENV=production webpack --progress --hide-modules",
