@@ -4,6 +4,8 @@
   "description": "A minimal Electron application",
   "main": "main.js",
   "scripts": {
+    // copy the custom build to the appropriate folder when done installing
+    "postinstall": "copyfiles darwin-x64-50/* node_modules/node-sass/vendor",
     "dev": "cross-env NODE_ENV=development webpack-dev-server --inline --hot",
     "build": "cross-env NODE_ENV=production webpack --progress --hide-modules",
     "start": "electron ."
@@ -21,6 +23,7 @@
     "babel-core": "^6.0.0",
     "babel-loader": "^6.0.0",
     "babel-preset-es2015": "^6.0.0",
+    "copyfiles": "^1.0.0",
     "cross-env": "^3.0.0",
     "css-loader": "^0.25.0",
     "electron": "^1.4.12",
