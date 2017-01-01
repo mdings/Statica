@@ -128,9 +128,21 @@ class Project {
 
             this.bs.init({
 
-                notify: false,
                 ui: false,
-                server: this.base
+                server: this.base,
+                snippetOptions: {
+
+                    // Provide a custom Regex for inserting the snippet.
+                    rule: {
+                        match: /<\/body>/i,
+                        fn: function (snippet, match) {
+
+                            console.log(snippet)
+                            console.log(match)
+                            return snippet + match;
+                        }
+                    }
+                }
              });
 
              console.log(this.bs)
@@ -210,7 +222,8 @@ class Project {
 
                 if (e) {
 
-                    ipcRenderer.send('notify', e.message)
+                    // ipcRenderer.send('notify', e.message)
+                    this.bs.notify(e.message, 20000);
 
                 } else {
 

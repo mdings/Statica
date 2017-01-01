@@ -6,7 +6,7 @@ const url = require('url')
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 let mainWindow
-let bgWindow 
+let bgWindow
 
 function createWindow () {
 
@@ -14,6 +14,7 @@ function createWindow () {
     mainWindow = new BrowserWindow({
         width: 800,
         height: 600,
+        titleBarStyle: 'hidden-inset',
         webPreferences: {
 
             scrollBounce: true
@@ -85,7 +86,7 @@ app.on('activate', function () {
 
 // communications
 ipcMain.on('create-project', (e, project) => {
-    
+
     bgWindow.webContents.send('create-project', project)
 })
 

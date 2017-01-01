@@ -1,50 +1,35 @@
 <template>
-    <main @dragover="showDropArea">
-        <Project v-for="project in projects" :project="project"></Project>
-        <button @click="openDialog">Add</button>
-        <button @click="clearStorage">Clear</button>
+    <main
+        @dragenter="handleDragEnter"
+        @drop="handleDrop"
+        @dragend="handleDrop"
+        @dragover="handleDragOver"
+        @dragleave="handleDragLeave"
+        @click="sendClickEvent"
+        hint="Drop folders here">
+        <Titlebar></Titlebar>
+        <Projects></Projects>
     </main>
 </template>
 
 <script>
 
-    import Project from './Project.vue'
+    import Titlebar from './Titlebar.vue'
+    import Projects from './Projects.vue'
 
-    const fs = require('fs')
     const {ipcRenderer} = require('electron')
-    const {dialog} = require('electron').remote
-    const storage = require('electron-json-storage')
+    let isDragging = false
+
 
     export default {
 
         components: {
 
-            Project
+            Projects,
+            Titlebar
         },
 
         created() {
-
-            document.body.ondrop = (e) => {
-
-                this.addProject(e.dataTransfer.files[0].path)
-                e.preventDefault()
-            }
-
-            storage.get('projects', (e, result) => {
-
-                if (e) throw e
-
-                if (result.length) {
-
-                    this.projects = result
-                }
-            })
-
-            this.$watch('projects', (newVal, oldVal) => {
-
-                // note: newVal == oldVal when mutating array!
-
-            })
 
             ipcRenderer.on('notify', (e, message) => {
 
@@ -55,68 +40,41 @@
             })
         },
 
-        data() {
-
-            return {
-
-                projects: []
-            }
-        },
-
         methods: {
 
-            clearStorage() {
+            handleDragEnter() {
 
-                storage.clear((e) => {
-
-                    if (e) throw e
-
-                    this.projects = []
-                })
+                isDragging = true
+                this.$el.classList.add('has-drop-area')
             },
 
-            showDropArea(e) {
+            handleDragOver(e) {
 
-                console.log('ok dropping')
                 e.preventDefault()
+                e.dataTransfer.dropEffect = 'move'
+                return false
             },
 
-            addProject(folder) {
+            handleDrop() {
 
-                // check if the added path is actually a directory
-                // @TODO: fail gracefully
-                if (fs.lstatSync(folder).isDirectory()) {
-                    
-                    const project = {
+                this.$el.classList.remove('has-drop-area')
+                isDragging = false
+            },
 
-                        id: require('shortid').generate(),
-                        name: folder,
-                        path: folder,
-                        isRunning: false
-                    }
+            handleDragLeave(e) {
 
-                    this.projects.push(project)
+                if (!isDragging) {
 
-                    ipcRenderer.send('create-project', project)
-
-                    //@TODO: move this to the background window
-                    storage.set('projects', this.projects, (e) => {
-
-                        if (e) throw e
-                    })
+                    this.$el.classList.remove('has-drop-area')
+                    return
                 }
+
+                isDragging = false
             },
 
-            openDialog() {
+            sendClickEvent() {
 
-                dialog.showOpenDialog({
-
-                    properties: ['openDirectory']
-
-                }, (filePaths) => {
-
-                    this.addProject(filePaths[0])
-                })
+                this.$root.$emit('app-click')
             }
         }
     }
@@ -135,9 +93,33 @@
         box-sizing: border-box;
     }
 
+    body {
+
+        font-family: system,-apple-system,".SFNSDisplay-Regular","Helvetica Neue",Helvetica,"Segoe UI",sans-serif;
+    }
+
     main {
 
         min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        -webkit-app-region: drag;
+
+        &.has-drop-area {
+
+            &:after {
+
+                display: block;
+                content: attr(hint);
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                z-index: 5;
+                color: darkgray;
+                font-size: 21px;
+            }
+        }
     }
 
 </style>
