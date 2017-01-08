@@ -39,7 +39,11 @@
 
                 if (result.length) {
 
-                    this.projects = result
+                    result.forEach((project) => {
+
+                        // add previously stored projects
+                        this.addProject(project.path, project.name)
+                    })
                 }
             })
 
@@ -76,7 +80,7 @@
                 })
             },
 
-            addProject(folder) {
+            addProject(folder, name) {
 
                 // check if the added path is actually a directory
                 // @TODO: fail gracefully
@@ -85,7 +89,7 @@
                     const project = {
 
                         id: require('shortid').generate(),
-                        name: 'Untitled project',
+                        name: name || 'Untitled project',
                         path: folder,
                         isRunning: false
                     }

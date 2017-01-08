@@ -1,0 +1,9 @@
+@import '_includes/vars';
+@import "../node_modules/reset-css/_reset";
+
+body {
+    color: #fff;
+    padding: 2vw;
+    display: flex;
+    background-color: lightslategray;
+}

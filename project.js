@@ -1,72 +1,40 @@
 const {ipcRenderer} = require('electron')
 const chokidar = require('chokidar')
-const browserify = require('browserify')
-const postcss = require('postcss')
-const sass = require('node-sass')
 const fs = require('fs')
 const mkdirp = require('mkdirp')
 const {app} = require('electron').remote
-const pug = require('pug')
+const utils = require('./utils')
 
-const has_ = (file) => {
-
-    const parts = file.split('/')
-    const l = parts.find((part) => {
-
-        return part.charAt(0) == '_'
-    })
-
-    return l ? true : false
-}
+let bs 
 
 class Project {
 
     constructor(project) {
 
         this.id = project.id
-        this.path = project.path  // root of the folder we are watching
-        this.base = `${app.getPath('userData')}/temp/${this.id}`
-
+        utils.setPath(project.path) // root of the folder we are watching
+        utils.setBase(`${app.getPath('userData')}/temp/${this.id}`)
+       
+        // keep a reference to the master files
         this.files = {}
         this.files.css = []
         this.files.js = []
 
         // create the directories if they don't exist yet
-        mkdirp(this.base, (e) => {
+        mkdirp(utils.getBase(), (e) => {
 
             if (e) throw new e
 
-            this.bs = require('browser-sync').create(this.id);
+            bs = require('browser-sync').create(this.id);
             this.watch()
         })
     }
 
-    getPathInfo(file, ext) {
-
-        const extension = file.split('.').pop()
-        let outFile = file.replace(this.path, this.base)
-        outFile = outFile.replace(extension, ext)
-        const inDir = file.split('/').slice(0, -1).join('/')
-        const inFile = file
-        const outDir = outFile.split('/').slice(0, -1).join('/')
-
-
-        return {
-
-            inDir,
-            inFile,
-            outDir,
-            outFile
-        }
-    }
-
     watch() {
 
-        // @TODO: ignore dot files, node_modules and bower_components
-        const watcher = chokidar.watch(this.path, {
+        const watcher = chokidar.watch(`${utils.getPath()}/**/*.{scss,sass,html,jade,pug,js,md}`, {
 
-            ignored: /(((^|[\/\\])\..)|node_modules|bower_components|build)/,
-            persistent: true
+            ignored: /(((^|[\/\\])\..)|node_modules|bower_components|build)/
         })
 
         watcher.on('add', (file) => {
@@ -74,10 +42,10 @@ class Project {
             console.log(`watcher add: ${file}`)
 
             const ext = file.split('.').pop()
-            if (!has_(file)) {
+            if (!utils.has_(file)) {
 
                 // set references to 'master' css files
-                if (ext == 'scss' || ext == 'css' || ext == 'sass') {
+                if (ext == 'scss' || ext == 'sass') {
 
                     this.files.css.push(file)
 
@@ -91,26 +59,25 @@ class Project {
         })
 
         watcher.on('unlink', (file) => {
+            
+            console.log(`unlinking file: ${file}`)
 
-            watcher.on('unlink', (file) => {
+            const ext = file.split('.').pop()
+            // set references to 'master' css files
+            if (ext == 'scss' || ext == 'css' || ext == 'sass') {
 
-                const ext = file.split('.').pop()
-                // set references to 'master' css files
-                if (ext == 'scss' || ext == 'css' || ext == 'sass') {
+                this.files.css = this.files.css.filter((item) => {
 
-                    this.files.css = this.files.css.filter((item) => {
+                    return item != file
+                })
 
-                        return item != file
-                    })
+            } else if (ext == 'js') {
 
-                } else if (ext == 'js') {
+                this.files.js = this.files.js.filter((item) => {
 
-                    this.files.js = this.files.js.filter((item) => {
-
-                        return item != file
-                    })
-                }
-            })
+                    return item != file
+                })
+            }
         })
 
         watcher.on('change', (file) => {
@@ -124,38 +91,24 @@ class Project {
 
     start() {
 
-        if(!this.bs.active) {
+        if(!bs.active) {
 
-            this.bs.init({
+            bs.init({
 
                 ui: false,
-                server: this.base,
-                snippetOptions: {
-
-                    // Provide a custom Regex for inserting the snippet.
-                    rule: {
-                        match: /<\/body>/i,
-                        fn: function (snippet, match) {
-
-                            console.log(snippet)
-                            console.log(match)
-                            return snippet + match;
-                        }
-                    }
-                }
+                notify: false,
+                server: utils.getBase()
              });
-
-             console.log(this.bs)
-
         }
     }
 
     parse(file, ext) {
 
         const fn = (ext == 'js')
-            ? 'js' : (ext == 'scss' || ext == 'css')
-                ? 'css' : (ext == 'jade' || ext == 'html' || ext == 'pug')
-                    ? 'jade' : 'copy'
+            ? 'js' : (ext == 'scss' || ext == 'sass')
+                ? 'css' : (ext == 'jade' || ext == 'pug')
+                    ? 'jade' : (ext == 'md')
+                        ? 'markdown' : 'copy'
 
 
         if (fn) {
@@ -164,108 +117,70 @@ class Project {
         }
     }
 
-    js(file) {
+    markdown(file) {
 
-        // Render the javascript
-        this.files.js.forEach((jsFile) => {
-
-            const paths = this.getPathInfo(file, 'js')
-
-            console.log(`compiling js:${jsFile}`)
-
-            browserify(jsFile)
-            .transform('babelify', {
-
-                // The preset should be loaded from the electron directories,
-                // not from the project ones
-                presets: [`${__dirname}/node_modules/babel-preset-es2015`]
-            })
-            .bundle((e, result) => {
-
-                if(e) {
-
-                    ipcRenderer.send('notify', e.message)
-
-                } else {
-
-                    mkdirp(paths.outDir, (e) => {
-
-                        if (e) throw new e
-
-                        fs.writeFileSync(paths.outFile, result, 'utf-8')
-                        this.bs.reload(true)
-                    })
-                }
-            })
-        })
+        require('./parsers/markdown')(file)
     }
 
-    css(file) {
+    js() {
 
-        // Render the css
-        this.files.css.forEach((cssFile) => {
+        // render the javascript
+        if (this.files.js.length > 0) {
 
-            console.log(`compiling css:${cssFile}`)
+            const promises = []
+            this.files.js.forEach((file) => {
 
-            const data = fs.readFileSync(cssFile, 'utf-8')
-            const paths = this.getPathInfo(cssFile, 'css')
-
-            const result = sass.render({
-
-                outFile: paths.outFile, // does NOT also write to file
-                sourceMap: true,
-                includePaths: [paths.inDir],
-                data: data,
-                outputStyle: 'compressed'
-
-            }, (e, result) => {
-
-                if (e) {
-
-                    // ipcRenderer.send('notify', e.message)
-                    this.bs.notify(e.message, 20000);
-
-                } else {
-
-                    postcss([require('autoprefixer')])
-                    .process(result.css)
-                    .then(output => {
-
-                        // write the outpout to file
-                        mkdirp(paths.outDir, (e) => {
-
-                            if (e) throw new e
-
-                            fs.writeFileSync(paths.outFile, output.css, 'utf-8')
-                            this.bs.reload(true)
-                        })
-                    });
-                }
+                promises.push(require('./parsers/js')(file))
             })
-        })
+
+            Promise.all(promises).then(() => {
+                
+                // only reload the browser when all the master js-files are compiled
+                console.log(`reloading bs from js`)
+                bs.reload(true)
+
+            }).catch((error) => {
+
+                console.log(error)
+            })
+        }
+    }
+
+    css() {
+
+        // render the css
+        if (this.files.css.length > 0) {
+
+            const promises = []
+            this.files.css.forEach((file) => {
+
+                promises.push(require('./parsers/css')(file))
+            })
+
+            Promise.all(promises).then(() => {
+                
+                // only reload the browser when all the master css-files are compiled
+                console.log(`reloading bs from css`)
+                bs.reload(true)
+
+            }).catch((error) => {
+
+                console.log(error)
+            })
+        }
+        
     }
 
     jade(file) {
 
-        // Render html
-        const compiledFunction = pug.compileFile(file)
-        const result = compiledFunction()
-        const paths = this.getPathInfo(file, 'html')
-
-        mkdirp(paths.outDir, (e) => {
-
-            if (e) throw new e
-
-            fs.writeFile(paths.outFile, result, 'utf-8')
-
-        })
+        require('./parsers/jade')(file)   
     }
 
     copy(file) {
 
         const fileName = file.split('/').pop()
         fs.createReadStream(file)
-            .pipe(fs.createWriteStream(`${this.base}/${fileName}`))
+            .pipe(fs.createWriteStream(`${utils.getBase()}/${fileName}`))
 
     }
 }

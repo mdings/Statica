@@ -188,7 +188,7 @@
         overflow: hidden;
         position: relative;
         text-overflow: ellipsis;
-        font-size: 17px;
+        font-size: 16px;
 
         &[contenteditable="true"] {
 
@@ -206,7 +206,9 @@
         cursor: default;
         width: 200px;
         max-width: 200px;
+        margin-top: 4px;
         overflow: hidden;
+        white-space: nowrap;
         text-overflow: ellipsis;
         font-size: 12px;
         -webkit-user-select: none;
