@@ -1,9 +1,8 @@
 var path = require('path')
 var webpack = require('webpack')
 
-
 module.exports = {
-  entry: './renderer.js',
+  entry: './app/renderer.js',
   output: {
     path: path.resolve(__dirname, './dist'),
     publicPath: '/dist/',

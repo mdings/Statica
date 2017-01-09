@@ -24,7 +24,7 @@
 
 <style lang="sass" scoped>
 
-    @import "mixins/inputs";
+    @import "app/mixins/inputs";
 
     header {
 

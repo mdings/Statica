@@ -1,6 +1,7 @@
 'use strict'
 
 const browserify = require('browserify')
+const babelify = require('babelify')
 const {app} = require('electron').remote
 const File = require('../file')
 
@@ -12,7 +13,7 @@ module.exports = class Javascript extends File {
 
     render(resolve, reject) {
         browserify(this.info.path)
-        .transform('babelify', {
+        .transform(babelify, {
             // The preset should be loaded from the electron directories,
             // not from the project ones
             presets: [`${app.getAppPath()}/node_modules/babel-preset-es2015`]

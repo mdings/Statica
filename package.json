@@ -1,13 +1,19 @@
 {
-  "name": "electron-quick-start",
+  "name": "statica",
+  "description": "Compile a static website really easy",
+  "author": "Maarten Dings <maartendings@gmail.com>",
   "version": "1.0.0",
-  "description": "A minimal Electron application",
   "main": "main.js",
   "scripts": {
-    "postinstall": "copyfiles darwin-x64-50/* node_modules/node-sass/vendor",
+    "postinstall": "copyfiles darwin-x64-50/* app/node_modules/node-sass/vendor && install-app-deps",
     "dev": "cross-env NODE_ENV=development webpack-dev-server --inline --hot",
     "build": "cross-env NODE_ENV=production webpack --progress --hide-modules",
-    "start": "electron ."
+    "start": "electron ./app",
+    "pack": "build --dir",
+    "dist": "DEBUG=electron-builder build"
+  },
+  "build": {
+    "appId": "com.statica.www"
   },
   "keywords": [
     "Electron",
@@ -16,7 +22,6 @@
     "tutorial",
     "demo"
   ],
-  "author": "GitHub",
   "license": "CC0-1.0",
   "devDependencies": {
     "babel-core": "^6.0.0",
@@ -25,33 +30,13 @@
     "copyfiles": "^1.0.0",
     "cross-env": "^3.0.0",
     "css-loader": "^0.25.0",
-    "electron": "^1.4.12",
+    "electron": "^1.4.13",
+    "electron-builder": "^11.2.3",
     "file-loader": "^0.9.0",
     "node-sass": "^3.11.3",
     "sass-loader": "^4.0.2",
     "vue-loader": "^9.7.0",
     "webpack": "^2.1.0-beta.25",
     "webpack-dev-server": "^2.1.0-beta.0"
-  },
-  "dependencies": {
-    "autoprefixer": "^6.5.4",
-    "babel-preset-es2015": "^6.18.0",
-    "babelify": "^7.3.0",
-    "browser-sync": "^2.18.5",
-    "browserify": "^13.1.1",
-    "chokidar": "^1.6.1",
-    "electron-json-storage": "^2.1.0",
-    "event-emitter": "^0.3.4",
-    "marky-mark": "^1.2.1",
-    "mkdirp": "^0.5.1",
-    "node-sass": "^3.13.1",
-    "postcss": "^5.2.6",
-    "postcss-import": "^9.0.0",
-    "postcss-sassy-import": "^1.2.3",
-    "pug": "^2.0.0-beta6",
-    "require-dir": "^0.3.1",
-    "shortid": "^2.2.6",
-    "upath": "^0.2.0",
-    "vue": "^2.0.3"
   }
 }
