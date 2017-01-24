@@ -12,6 +12,7 @@ module.exports = class Javascript extends File {
     }
 
     render(resolve, reject) {
+        console.log(`rendering javascript: ${this.info.path}`)
         browserify(this.info.path)
         .transform(babelify, {
             // The preset should be loaded from the electron directories,

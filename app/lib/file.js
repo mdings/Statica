@@ -7,7 +7,6 @@ const path = require('upath')
 module.exports = class File {
 
     constructor(filename, sourceDir, targetDir) {
-
         const ext =
             path.extname(path.basename(filename))
             .toLowerCase()
@@ -35,7 +34,7 @@ module.exports = class File {
         }
     }
 
-     promise() {
+    promise() {
         return new Promise((resolve, reject) => {
             this.render(resolve, reject)
         })

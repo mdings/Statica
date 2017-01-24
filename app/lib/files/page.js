@@ -1,20 +1,40 @@
 'use strict'
 
 const fs = require('fs')
+const path = require('path')
 const pug = require('pug')
+const mm = require('marky-mark')
+const findUp = require('find-up')
 const File = require('../file')
 
 module.exports = class Page extends File {
 
     constructor(filepath, sourceDir, targetDir) {
         super(filepath, sourceDir, targetDir)
+        // Keep a reference for collections to be set by the compiler
+        this.collection = {}
     }
 
     //@TODO: Look into node streams (.pipe())
     render(resolve, reject) {
-        if(this.isPug) {
-            const compiled = pug.compileFile(this.info.path)
-            this.write(compiled(), resolve)
+        if(this.isMarkDown) {
+            const base = path.dirname(this.info.path)
+            findUp(['_layout.pug'], {
+                cwd: base
+            })
+            .then(filepath => {
+                if (filepath) {
+                    const data = mm.parseFileSync(this.info.path)
+                    const output = this.puggify(filepath, data)
+                    this.write(output, resolve)
+                } else {
+                    reject('No layout file found')
+                }
+            })
+        } else if (this.isPug) {
+            const data = this.collection.all
+            const output = this.puggify(this.info.path, data)
+            this.write(output, resolve)
         } else if (this.isHTML) {
             this.read()
             // Enable partials for regular HTML-files
@@ -29,6 +49,11 @@ module.exports = class Page extends File {
         }
     }
 
+    puggify(file, data) {
+        const compiled = pug.compileFile(file)
+        return compiled(data)
+    }
+
     get exportExtension() {
         return 'html'
     }
@@ -36,6 +61,11 @@ module.exports = class Page extends File {
     get isHTML() {
         return this.info.ext == 'html'
             || this.info.ext == 'htm'
+    }
+
+    get isMarkDown() {
+        return this.info.ext == 'md'
+            || this.info.ext == 'markdown'
     }
 
     get isPug() {

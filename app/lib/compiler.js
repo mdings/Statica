@@ -1,5 +1,6 @@
 const path = require('upath')
 const statica = require('./statica')
+const Collection = require('./collection')
 const {app} = require('electron').remote
 
 var bs
@@ -7,31 +8,45 @@ var bs
 module.exports = class Compiler {
 
     constructor(project) {
-        // Set the id
         this.project = project
+        this.collection = new Collection
         this.start()
     }
 
     start() {
         const sourceDir = this.project.path
         const targetDir = `${app.getPath('userData')}/temp/${this.project.id}`
+
+        console.log(targetDir)
+        
         statica(sourceDir, targetDir)
-        .on('started', () => {
-            // Instantiate a browsersync instance
-            bs = require('browser-sync').create(this.project.id);
-        })
-        .on('file-add', file => {})
-        .on('render-type', files => {
-            // Render files
-            this.render(files)
-            // Reload the browser if activated
-            if (bs.active) {
-                bs.reload(true)
-            }
-        })
-        .on('render-all', files => {
-            this.render(files)
-        })
+            .on('started', () => {
+                // Instantiate a browsersync instance
+                bs = require('browser-sync').create(this.project.id);
+            })
+            .on('dir-add', dirname => {
+                // collections.set(dirname, sourceDir)
+            })
+            .on('file-add', file => {
+                // Pass a reference of the collections to the file if it needs them
+                if (file.collection) {
+                    file.collection = this.collection
+                }
+            })
+            .on('set-collection', dirname => {
+                this.collection.set(dirname)
+            })
+            .on('render-type', files => {
+                // Render files
+                this.render(files)
+                // Reload the browser if activated
+                if (bs.active) {
+                    bs.reload(true)
+                }
+            })
+            .on('render-all', files => {
+                this.render(files)
+            })
     }
 
     open() {
@@ -46,7 +61,6 @@ module.exports = class Compiler {
     }
 
     render(files) {
-        console.log(files)
         // Create a batch to process
         const batch = []
         // Push the files to the batch
@@ -56,7 +70,7 @@ module.exports = class Compiler {
 
         // Render the batch
         Promise.all(batch).then(() => {
-            console.log('all done!')
+            console.log('all done for: ' + this.project.id)
         }).catch(error => {
             console.log(error)
         })

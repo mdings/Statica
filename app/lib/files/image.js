@@ -9,6 +9,7 @@ module.exports = class Image extends File {
     }
 
     render() {
+        console.log(`copying image: ${this.info.path}`)
         this.copy()
     }
 

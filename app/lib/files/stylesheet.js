@@ -12,6 +12,7 @@ module.exports = class Stylesheet extends File {
     }
 
     render(resolve, reject) {
+        console.log(`rendering stylesheet: ${this.info.path}`)
         // First read the contents of the file
         this.read()
         // Render CSS
