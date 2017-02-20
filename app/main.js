@@ -66,11 +66,15 @@ function createWindow () {
 
         storage.get('projects', (e, projects) => {
 
-            // if (e) throw e
-
             if (projects) {
 
                 mainWindow.webContents.send('projects-loaded', projects)
+
+                // Send the project to the compiler
+                projects.forEach(project => {
+
+                    bgWindow.webContents.send('create-project', project)
+                })
             }
         })
     })
