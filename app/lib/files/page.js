@@ -11,37 +11,42 @@ module.exports = class Page extends File {
 
     constructor(filepath, sourceDir, targetDir) {
         super(filepath, sourceDir, targetDir)
-        // Keep a reference for collections to be set by the compiler
-        this.collection = {}
     }
 
     //@TODO: Look into node streams (.pipe())
     render(resolve, reject) {
+        console.log(`rendering javascript: ${this.fileInfo.sourceFile}`)
+        const sourcePath = `${this.fileInfo.sourceDir}/${this.fileInfo.sourceFile}`
         if(this.isMarkDown) {
-            const base = path.dirname(this.info.path)
+            // Find the closest layout file
             findUp(['_layout.pug'], {
-                cwd: base
+                cwd: this.fileInfo.sourceDir
             })
             .then(filepath => {
                 if (filepath) {
-                    const data = mm.parseFileSync(this.info.path)
+                    const data = mm.parseFileSync(sourcePath)
                     const output = this.puggify(filepath, data)
                     this.write(output, resolve)
                 } else {
                     reject('No layout file found')
                 }
             })
+
         } else if (this.isPug) {
-            const data = this.collection.all
-            const output = this.puggify(this.info.path, data)
+            const output = this.puggify(sourcePath, data)
             this.write(output, resolve)
+
         } else if (this.isHTML) {
             this.read()
+            
             // Enable partials for regular HTML-files
             const output = this.input.replace(/\<\!-- @include (.*) --\>/g, (match, file) => {
-                return fs.readFileSync(`${this.info.sourceDir}/${file}`);
+                return fs.readFileSync(`${this.fileInfo.sourceDir}/${file}`);
             })
+
+            // Writeout
             this.write(output, resolve)
+
         } else {
             // Just copy the file when it's other than Pug
             this.read()

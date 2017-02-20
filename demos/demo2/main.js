@@ -1,1 +1,5 @@
-console.log('ok')
+const render = () => {
+    console.log('ok')
+}
+
+render()

@@ -7,25 +7,20 @@ const path = require('upath')
 module.exports = class File {
 
     constructor(filename, sourceDir, targetDir) {
-        const ext =
-            path.extname(path.basename(filename))
-            .toLowerCase()
-            .slice(1)
 
-        // Set some fileinfo
-        this.ext = ext
+        // Set some fileInfo
+        const baseName = path.basename(filename)
+        const extension = path.extname(baseName).slice(1)
+        const dirName = path.dirname(filename)
 
-        this.info = {
-            ext,
-            sourceDir,
-            targetDir,
-            path: filename,
-            target: (() => {
-                const name = filename.replace(sourceDir, '')
-                return `${targetDir}${name.replace(ext, this.exportExtension)}`
-            })()
+        this.fileInfo = {
+            extension: extension,
+            sourceFile: baseName,
+            sourceDir: dirName,
+            targetDir: `${targetDir}${dirName.replace(sourceDir, '')}`,
         }
 
+        this.fileInfo.targetFile = baseName.replace(extension, this.exportExtension)
         this.type = this.constructor.name.toLowerCase()
 
          // Check if the extensions are defined for filetypes
@@ -41,24 +36,31 @@ module.exports = class File {
     }
 
     read() {
-        this.input = fs.readFileSync(this.info.path, 'utf8')
+        const sourcePath = `${this.fileInfo.sourceDir}/${this.fileInfo.sourceFile}`
+        this.input = fs.readFileSync(sourcePath, 'utf8')
     }
 
     copy() {
-        // Create the dir if it does not exist yet
-        mkdirp.sync(path.dirname(this.info.target))
-        const inFile = fs.createReadStream(this.info.path)
-        const outFile = fs.createWriteStream(this.info.target);
+        const sourcePath = `${this.fileInfo.sourceDir}/${this.fileInfo.sourceFile}`
+        const targetPath = `${this.fileInfo.targetDir}/${this.fileInfo.targetFile}`
 
+        // Create the dir if it does not exist yet
+        mkdirp.sync(path.dirname(this.fileInfo.targetDir))
+        const inFile = fs.createReadStream(sourcePath)
+        const outFile = fs.createWriteStream(targetPath);
+        
+        // Do the actual copying 
         inFile.pipe(outFile);
     }
 
     write(output, cb) {
+        const targetPath = `${this.fileInfo.targetDir}/${this.fileInfo.targetFile}`
+        
         // Create the dir if it does not exist yet
-        mkdirp.sync(path.dirname(this.info.target))
+        mkdirp.sync(path.dirname(targetPath))
 
         // And write the file..!
-        fs.writeFile(this.info.target, output, (e) => {
+        fs.writeFile(targetPath, output, (e) => {
             if (e) throw e
             if (cb) cb()
         })

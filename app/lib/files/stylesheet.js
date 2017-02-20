@@ -1,6 +1,7 @@
 'use strict'
 
 const sass = require('node-sass')
+const stylus = require('stylus')
 const postcss = require('postcss')
 const path = require('upath')
 const File = require('../file')
@@ -12,27 +13,41 @@ module.exports = class Stylesheet extends File {
     }
 
     render(resolve, reject) {
-        console.log(`rendering stylesheet: ${this.info.path}`)
+        console.log(`rendering stylesheet: ${this.fileInfo.sourceFile}`)
+        this.resolve = resolve
+        this.reject = reject
+
         // First read the contents of the file
         this.read()
-        // Render CSS
+
+        // If the files is SASS
         if (this.isSass) {
-            var output = sass
-            .renderSync({
-                data: this.input,
-                includePaths: [path.dirname(this.info.path)]
-            })
-            .css
-            .toString('utf8')
+            const output = sass
+                .renderSync({
+                    data: this.input,
+                    includePaths: [this.fileInfo.sourceDir]
+                }).css.toString('utf8')
+
+            this.process(output)
         }
 
+        // If the file is Stylus
+        if (this.isStylus) {
+            stylus.render(this.input, (e, output) => {
+                if (e) this.reject(e)
+                this.process(output)
+            });
+        }
+    }
+
+    process(css) {
         // Run postCSS
         postcss([
-            require('autoprefixer')
+            require('postcss-cssnext')
         ])
-        .process(output)
+        .process(css)
         .then(result => {
-            this.write(result.css, resolve)
+            this.write(result.css, this.resolve)
         })
     }
 
@@ -40,7 +55,11 @@ module.exports = class Stylesheet extends File {
         return 'css'
     }
 
+    get isStylus() {
+        return this.fileInfo.extension == 'styl'
+    }
+
     get isSass() {
-        return this.info.ext == 'scss'
+        return this.fileInfo.extension == 'scss'
     }
 }

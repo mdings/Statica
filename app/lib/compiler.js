@@ -1,6 +1,5 @@
 const path = require('upath')
 const statica = require('./statica')
-const Collection = require('./collection')
 const {app} = require('electron').remote
 
 var bs
@@ -9,7 +8,6 @@ module.exports = class Compiler {
 
     constructor(project) {
         this.project = project
-        this.collection = new Collection
         this.start()
     }
 
@@ -32,9 +30,6 @@ module.exports = class Compiler {
                 if (file.collection) {
                     file.collection = this.collection
                 }
-            })
-            .on('set-collection', dirname => {
-                this.collection.set(dirname)
             })
             .on('render-type', files => {
                 // Render files

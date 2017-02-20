@@ -8,18 +8,21 @@ const File = require('../file')
 module.exports = class Javascript extends File {
 
     constructor(filepath, sourceDir, targetDir) {
+
         super(filepath, sourceDir, targetDir)
     }
 
     render(resolve, reject) {
-        console.log(`rendering javascript: ${this.info.path}`)
-        browserify(this.info.path)
+        console.log(`rendering javascript: ${this.fileInfo.sourceFile}`)
+        const sourcePath = `${this.fileInfo.sourceDir}/${this.fileInfo.sourceFile}`
+        browserify(sourcePath)
         .transform(babelify, {
             // The preset should be loaded from the electron directories,
             // not from the project ones
             presets: [`${app.getAppPath()}/node_modules/babel-preset-es2015`]
         })
         .bundle((e, result) => {
+            
             if(e) reject(e)
             this.write(result, resolve)
         })

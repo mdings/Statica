@@ -8,6 +8,7 @@
 
     import Project from './Project.vue'
 
+    const path = require('upath')
     const fs = require('fs')
     const {dialog} = require('electron').remote
     const {ipcRenderer} = require('electron')
@@ -31,21 +32,8 @@
             // listen for the open dialog command
             this.$root.$on('open-dialog', this.openDialog)
             this.$root.$on('remove-project', this.removeProject)
-            this.$root.$on('update-project', this.updateProject)
-
-            storage.get('projects', (e, result) => {
-
-                if (e) throw e
-
-                if (result.length) {
-
-                    result.forEach((project) => {
-
-                        // add previously stored projects
-                        this.addProject(project.path, project.name)
-                    })
-                }
-            })
+            // this.$root.$on('update-project', this.updateProject)
+            ipcRenderer.on('projects-loaded', this.loadProjects)
 
             this.$watch('projects', (newVal, oldVal) => {
 
@@ -80,6 +68,11 @@
                 })
             },
 
+            loadProjects(e, projects) {
+
+                this.projects = JSON.parse(projects)
+            },
+
             addProject(folder, name) {
 
                 // check if the added path is actually a directory
@@ -89,7 +82,7 @@
                     const project = {
 
                         id: require('shortid').generate(),
-                        name: name || 'Untitled project',
+                        name: path.basename(folder),
                         path: folder,
                         isRunning: false
                     }
@@ -98,8 +91,7 @@
 
                     ipcRenderer.send('create-project', project)
 
-                    //@TODO: move this to the background window
-                    storage.set('projects', this.projects, (e) => {
+                    storage.set('projects', JSON.stringify(this.projects), (e) => {
 
                         if (e) throw e
                     })
@@ -108,7 +100,7 @@
 
             updateProject() {
 
-                storage.set('projects', this.projects, (e) => {
+                storage.set('projects', JSON.stringify(this.projects), (e) => {
 
                     if (e) throw e
                 })
@@ -121,9 +113,7 @@
                     return item != project
                 })
 
-                //@TODO: move this to the background window
-                //@TODO: send the updated projects to the watcher
-                storage.set('projects', this.projects, (e) => {
+                storage.set('projects', JSON.stringify(this.projects), (e) => {
 
                     if (e) throw e
                 })

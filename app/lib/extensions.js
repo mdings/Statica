@@ -1,6 +1,8 @@
 module.exports = {
     scss: 'stylesheet',
     sass: 'stylesheet',
+    styl: 'stylesheet',
+    css: 'stylesheet',
 
     js: 'javascript',
 

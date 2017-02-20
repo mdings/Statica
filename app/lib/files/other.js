@@ -9,12 +9,12 @@ module.exports = class Other extends File {
     }
 
     render() {
-        console.log(`copying other: ${this.info.path}`)
+        console.log(`copying other: ${this.fileInfo.sourceFile}`)
         this.copy()
     }
 
     get exportExtension() {
         // Keep the same extension
-        return this.ext
+        return this.fileInfo.extension
     }
 }

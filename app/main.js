@@ -2,11 +2,14 @@ const {ipcMain,app, BrowserWindow} = require('electron')
 
 const path = require('path')
 const url = require('url')
+const storage = require('electron-json-storage')
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 let mainWindow
 let bgWindow
+
+
 
 function createWindow () {
 
@@ -57,6 +60,21 @@ function createWindow () {
         mainWindow = null
         bgWindow = null
     })
+
+    // Wait for the contents to load, then load the projects
+    mainWindow.webContents.on('did-finish-load', () => {
+
+        storage.get('projects', (e, projects) => {
+
+            if (e) throw e
+
+            if (projects.length) {
+
+                mainWindow.webContents.send('projects-loaded', projects)
+            }
+        })
+    })
+
 }
 
 // This method will be called when Electron has finished
