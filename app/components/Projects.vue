@@ -70,7 +70,7 @@
 
             loadProjects(e, projects) {
 
-                this.projects = JSON.parse(projects)
+                this.projects = projects
             },
 
             addProject(folder, name) {
@@ -91,7 +91,7 @@
 
                     ipcRenderer.send('create-project', project)
 
-                    storage.set('projects', JSON.stringify(this.projects), (e) => {
+                    storage.set('projects', this.projects, (e) => {
 
                         if (e) throw e
                     })
@@ -100,7 +100,7 @@
 
             updateProject() {
 
-                storage.set('projects', JSON.stringify(this.projects), (e) => {
+                storage.set('projects', this.projects, (e) => {
 
                     if (e) throw e
                 })
@@ -113,7 +113,7 @@
                     return item != project
                 })
 
-                storage.set('projects', JSON.stringify(this.projects), (e) => {
+                storage.set('projects', this.projects, (e) => {
 
                     if (e) throw e
                 })

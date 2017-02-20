@@ -66,9 +66,9 @@ function createWindow () {
 
         storage.get('projects', (e, projects) => {
 
-            if (e) throw e
+            // if (e) throw e
 
-            if (projects.length) {
+            if (projects) {
 
                 mainWindow.webContents.send('projects-loaded', projects)
             }
