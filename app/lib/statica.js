@@ -1,93 +1,113 @@
-'use strict'
-
-const ee = require('event-emitter')
-const path  = require('upath')
+const path = require('upath')
 const chokidar = require('chokidar')
-const ignored = require('./ignored')
 const extensions  = require('./extensions')
 const fileTypes  = require('require-dir')('./files')
+const ignored = require('./ignored')
+const {app} = require('electron').remote
 
-module.exports = function (sourceDir, targetDir) {
+function hasUnderscore(filename) {
 
-    const emitter = ee()
-    var files = []
+    const parts = path.normalize(filename).split('/')
+    const scores = parts.filter(part => {
 
-    function hasUnderscore(filename) {
+        return part.charAt(0) == '_'
+    })
 
-        const parts = path.normalize(filename).split('/')
-        const scores = parts.filter(part => {
+    return scores.length > 0 ? true : false
+}
 
-            return part.charAt(0) == '_'
-        })
+module.exports = class Compiler {
 
-        return scores.length > 0 ? true : false
+    constructor(project) {
+
+        // Set project properties
+        this.files = []
+        this.project = project
+        this.browsersync = require('browser-sync').create(project.id);
+        this.sourceDir = project.path
+        this.targetDir = `${app.getPath('userData')}/temp/${project.id}`
+
+        chokidar.watch(this.sourceDir, {ignored: ignored(this.sourceDir, this.targetDir)})
+            .on('add', filename => this.createFile(path.normalize(filename)))
+            .on('change', filename => this.change(filename))
+            .on('ready', () => {
+
+                console.log(this.files)
+            })
     }
 
-    function createFile(filename) {
+    createFile(filename) {
 
         const ext = path.extname(filename).toLowerCase().slice(1)
         const type = extensions[ext] || 'other'
-        const file = new fileTypes[type](filename, sourceDir, targetDir)
+        const file = new fileTypes[type](filename, this.sourceDir, this.targetDir)
 
         if(!hasUnderscore(filename)) {
-            
-            files.push(file)
-            emitter.emit('file-add', file)
+
+            this.files.push(file)
         }
     }
 
-    chokidar.watch(sourceDir, {ignored: ignored(sourceDir, targetDir)})
-        .on('add', filename => createFile(path.normalize(filename)))
-        .on('change', filename => {
+    change(filename) {
 
-            // Get the extension
-            const ext = path.extname(filename).toLowerCase().slice(1)
-            
-            // Update pages that make use of a layout file when it has changed
-            // @TODO: support handlebars/ejs as well
-            // @TODO: might need some refactoring
-            // @TODO: the browsersync plugin should work an all pages
-            if (path.basename(filename) == '_layout.pug') {
+        // / Get the extension
+        const ext = path.extname(filename).toLowerCase().slice(1)
 
-                var filtered = files.filter(file => {
+        // Filter the files bases on their type
+        var filtered = this.files.filter(file => {
 
-                    return file.info.path.startsWith(path.dirname(filename))
-                        && (file.ext == 'markdown' || file.ext == 'md')
-                })
+            const info = file.fileInfo
+            // Render only the 'masters' for the javascript and stylesheet
+            if (extensions[ext] == 'javascript' ||
+                extensions[ext] == 'stylesheet') {
+
+                return file.type == extensions[ext]
 
             } else {
 
-                // Filter the files bases on their type
-                var filtered = files.filter(file => {
-
-                    // Render only the 'masters' for the javascript and stylesheet
-                    if (extensions[ext] == 'javascript' || 
-                        extensions[ext] == 'stylesheet') {
-
-                        return file.type == extensions[ext]
-
-                    } else {
-
-                        return file.type == extensions[ext]
-                            && file.info.path == filename
-                    }
-                })
+                return file.type == extensions[ext]
+                    && `${info.sourceDir}/${info.sourceFile}` == filename
             }
-
-            console.log(filtered)
-            emitter.emit('render-type', filtered)
-        })
-        .on('ready', () => {
-            console.log('all done!')
-            // Might be a good idea to create the collections here first!
-            // Do an initial render when the project is created/added
-            // emitter.emit('render-all', files)
         })
 
-    process.nextTick(() => {
-        
-        emitter.emit('started')
-    })
+        this.render(filtered)
+    }
 
-    return emitter
+    launch() {
+
+        this.render(this.files)
+
+        if (!this.browsersync.active) {
+
+            const targetDir = `${app.getPath('userData')}/temp/${this.project.id}`
+
+            this.browsersync.init({
+                ui: false,
+                notify: false,
+                server: targetDir
+            });
+        }
+    }
+
+    render(files) {
+
+        // Create a batch to process
+        let batch = []
+
+        // Push the files to the batch
+        files.forEach(file => {
+
+            batch.push(file.promise())
+        })
+
+        // Render the batch
+        Promise.all(batch).then(() => {
+
+            console.log('all done for: ' + this.project.id)
+
+        }).catch(error => {
+
+            console.log(error)
+        })
+    }
 }

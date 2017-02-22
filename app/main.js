@@ -8,6 +8,7 @@ const storage = require('electron-json-storage')
 // be closed automatically when the JavaScript object is garbage collected.
 let mainWindow
 let bgWindow
+let exportsWindow
 
 
 
@@ -21,6 +22,48 @@ function createWindow () {
         webPreferences: {
 
             scrollBounce: true
+        }
+    })
+
+    exportsWindow = new BrowserWindow({
+
+        width: 500,
+        height: 500,
+        minimizable: false,
+        maximizable: false,
+        show: false
+    })
+
+    exportsChildWindow = new BrowserWindow({
+
+        width: 200,
+        height: 200,
+        show: false,
+        parent: exportsWindow,
+        modal: true
+    })
+
+    exportsChildWindow.loadURL(url.format({
+
+        pathname: path.join(__dirname, 'newexport.html'),
+
+            protocol: 'file:',
+            slashes: true
+        }))
+
+    exportsWindow.loadURL(url.format({
+
+        pathname: path.join(__dirname, 'exports.html'),
+
+            protocol: 'file:',
+            slashes: true
+        }))
+
+    exportsWindow.on('close', () => {
+
+        if (exportsWindow) {
+
+            exportsWindow.hide()
         }
     })
 
@@ -59,6 +102,7 @@ function createWindow () {
         // when you should delete the corresponding element.
         mainWindow = null
         bgWindow = null
+        exportsWindow = null
     })
 
     // Wait for the contents to load, then load the projects
@@ -68,13 +112,16 @@ function createWindow () {
 
             if (projects) {
 
-                mainWindow.webContents.send('projects-loaded', projects)
+                mainWindow.webContents.send('projects-loaded', Array.from(projects))
 
                 // Send the project to the compiler
-                projects.forEach(project => {
+                if (Object.prototype.toString.call(projects) === '[object Array]') {
 
-                    bgWindow.webContents.send('create-project', project)
-                })
+                    projects.forEach(project => {
+
+                        bgWindow.webContents.send('create-project', project)
+                    })
+                }
             }
         })
     })
@@ -106,15 +153,43 @@ app.on('activate', function () {
     }
 })
 
+app.on('before-quit', function() {
+
+    exportsWindow = null
+})
+
 // communications
 ipcMain.on('create-project', (e, project) => {
 
     bgWindow.webContents.send('create-project', project)
 })
 
+ipcMain.on('show-add-export-window', (e, project) => {
+
+    exportsChildWindow.webContents.send('set-project', project)
+    exportsChildWindow.show()
+})
+
+ipcMain.on('add-export-option', (e, options) => {
+
+    exportsChildWindow.hide()
+    exportsWindow.webContents.send('update-project-externals', options)
+})
+
+ipcMain.on('close-add-export-window', () => {
+
+    exportsChildWindow.hide()
+})
+
 ipcMain.on('start-server', (e, id) => {
 
     bgWindow.webContents.send('start-server', id)
+})
+
+ipcMain.on('show-export-window', (e, project) => {
+
+    exportsWindow.webContents.send('show-export-window', project)
+    exportsWindow.show()
 })
 
 ipcMain.on('notify', (e, message) => {

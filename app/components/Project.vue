@@ -51,7 +51,11 @@
                     { label: 'Github' },
                     { label: 'Azure' },
                     { type: 'separator' },
-                    { label: 'Manage..' }
+                    { label: 'Manage..',
+                        click() {
+                            ipcRenderer.send('show-export-window', vm.project)
+                        }
+                    }
                 ]
             }))
 
@@ -99,7 +103,6 @@
 
             startProject() {
 
-                console.log('start server')
                 ipcRenderer.send('start-server', this.project.id)
             },
 

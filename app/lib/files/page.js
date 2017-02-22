@@ -38,7 +38,7 @@ module.exports = class Page extends File {
 
         } else if (this.isHTML) {
             this.read()
-            
+
             // Enable partials for regular HTML-files
             const output = this.input.replace(/\<\!-- @include (.*) --\>/g, (match, file) => {
                 return fs.readFileSync(`${this.fileInfo.sourceDir}/${file}`);
@@ -64,17 +64,17 @@ module.exports = class Page extends File {
     }
 
     get isHTML() {
-        return this.info.ext == 'html'
-            || this.info.ext == 'htm'
+        return this.fileInfo.extension == 'html'
+            || this.fileInfo.extension == 'htm'
     }
 
     get isMarkDown() {
-        return this.info.ext == 'md'
-            || this.info.ext == 'markdown'
+        return this.fileInfo.extension == 'md'
+            || this.fileInfo.extension == 'markdown'
     }
 
     get isPug() {
-        return this.info.ext == 'pug'
-            || this.info.ext == 'jade'
+        return this.fileInfo.extension == 'pug'
+            || this.fileInfo.extension == 'jade'
     }
 }

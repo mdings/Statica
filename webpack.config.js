@@ -2,11 +2,15 @@ var path = require('path')
 var webpack = require('webpack')
 
 module.exports = {
-  entry: './app/renderer.js',
+  entry: {
+    renderer: './app/renderer.js',
+    exports: './app/exports.js',
+    service: './app/service.js'
+  },
   output: {
     path: path.resolve(__dirname, './dist'),
     publicPath: '/dist/',
-    filename: 'build.js'
+    filename: '[name].build.js'
   },
   target: 'electron',
   module: {

@@ -32,7 +32,7 @@
             // listen for the open dialog command
             this.$root.$on('open-dialog', this.openDialog)
             this.$root.$on('remove-project', this.removeProject)
-            // this.$root.$on('update-project', this.updateProject)
+            this.$root.$on('update-project', this.updateProject)
             ipcRenderer.on('projects-loaded', this.loadProjects)
 
             this.$watch('projects', (newVal, oldVal) => {

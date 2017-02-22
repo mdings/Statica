@@ -1,20 +1,25 @@
 'use strict'
 
 const {ipcRenderer} = require('electron')
-const Compiler = require('./lib/compiler')
+const Statica = require('./lib/statica')
 const projects = []
 
 ipcRenderer.on('create-project', (e, project) => {
-    projects.push(new Compiler(project))
+
+    projects.push(new Statica(project))
 })
 
 ipcRenderer.on('start-server', (e, id) => {
+
     // find the project from the array
-    const compiler = projects.find((item) => {
+    const project = projects.find((item) => {
+
       return item.project.id == id
     })
 
-    if (compiler) {
-        compiler.open()
+    console.log(project)
+    if (project) {
+
+        project.launch()
     }
 })

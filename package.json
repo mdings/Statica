@@ -9,7 +9,7 @@
     "dev": "cross-env NODE_ENV=development webpack-dev-server --inline --hot",
     "build": "cross-env NODE_ENV=production webpack --progress --hide-modules",
     "start": "electron ./app",
-    "release": "electron-packager ./app Statica --out=dist --overwrite && electron-installer-dmg ./dist/Statica-darwin-x64/Statica.app Statica"
+    "release": "electron-packager ./app Statica --out=dist && electron-installer-dmg --overwrite ./dist/Statica-darwin-x64/Statica.app Statica"
   },
   "build": {
     "appId": "com.statica.www"
