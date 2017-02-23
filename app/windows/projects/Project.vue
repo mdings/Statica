@@ -53,7 +53,7 @@
                     { type: 'separator' },
                     { label: 'Manage..',
                         click() {
-                            ipcRenderer.send('show-export-window', vm.project)
+                            ipcRenderer.send('showExportersWindow', vm.project)
                         }
                     }
                 ]

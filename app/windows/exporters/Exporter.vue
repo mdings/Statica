@@ -1,7 +1,5 @@
 <template>
-    <div>
-        yes here we go
-    </div>
+    <div>{{exporter.name}}</div>
 </template>
 
 <script>
@@ -9,9 +7,10 @@
 
     export default {
 
+        props: ['exporter'],
+
         created() {
 
-            console.log('this is real')
         }
     }
 </script>

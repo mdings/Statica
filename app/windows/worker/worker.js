@@ -1,7 +1,7 @@
 'use strict'
 
 const {ipcRenderer} = require('electron')
-const Statica = require('./lib/statica')
+const Statica = require('../../lib/statica')
 const projects = []
 
 ipcRenderer.on('create-project', (e, project) => {

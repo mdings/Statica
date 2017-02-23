@@ -12,7 +12,7 @@
     const fs = require('fs')
     const {dialog} = require('electron').remote
     const {ipcRenderer} = require('electron')
-    const storage = require('electron-json-storage')
+    const store = require('../../store')
 
     export default {
 
@@ -60,12 +60,12 @@
 
             clearStorage() {
 
-                storage.clear((e) => {
+                // storage.clear((e) => {
 
-                    if (e) throw e
+                //     if (e) throw e
 
-                    this.projects = []
-                })
+                //     this.projects = []
+                // })
             },
 
             loadProjects(e, projects) {
@@ -84,6 +84,7 @@
                         id: require('shortid').generate(),
                         name: path.basename(folder),
                         path: folder,
+                        exporters: [],
                         isRunning: false
                     }
 
@@ -91,19 +92,14 @@
 
                     ipcRenderer.send('create-project', project)
 
-                    storage.set('projects', this.projects, (e) => {
-
-                        if (e) throw e
-                    })
+                    // Persist to db
+                    store.setAllProjects(this.projects)
                 }
             },
 
             updateProject() {
 
-                storage.set('projects', this.projects, (e) => {
-
-                    if (e) throw e
-                })
+                store.setAllProjects(this.projects)
             },
 
             removeProject(project) {
@@ -113,10 +109,7 @@
                     return item != project
                 })
 
-                storage.set('projects', this.projects, (e) => {
-
-                    if (e) throw e
-                })
+                store.setAllProjects(this.projects)
             },
 
             openDialog() {

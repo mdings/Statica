@@ -2,20 +2,19 @@ const {ipcMain,app, BrowserWindow} = require('electron')
 
 const path = require('path')
 const url = require('url')
-const storage = require('electron-json-storage')
+const store = require('./store')
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
-let mainWindow
-let bgWindow
-let exportsWindow
-
+let projectsWindow
+let workerWindow
+let exportersWindow
 
 
 function createWindow () {
 
     // Create the browser window.
-    mainWindow = new BrowserWindow({
+    projectsWindow = new BrowserWindow({
         width: 800,
         height: 600,
         titleBarStyle: 'hidden-inset',
@@ -25,103 +24,86 @@ function createWindow () {
         }
     })
 
-    exportsWindow = new BrowserWindow({
+    exportersWindow = new BrowserWindow({
 
         width: 500,
         height: 500,
         minimizable: false,
         maximizable: false,
+        fullscreenable: false,
         show: false
     })
 
-    exportsChildWindow = new BrowserWindow({
+    exportersWindow.loadURL(url.format({
 
-        width: 200,
-        height: 200,
-        show: false,
-        parent: exportsWindow,
-        modal: true
-    })
-
-    exportsChildWindow.loadURL(url.format({
-
-        pathname: path.join(__dirname, 'newexport.html'),
+        pathname: path.join(__dirname, 'windows/exporters/index.html'),
 
             protocol: 'file:',
             slashes: true
         }))
 
-    exportsWindow.loadURL(url.format({
+    exportersWindow.on('close', (e) => {
 
-        pathname: path.join(__dirname, 'exports.html'),
+        if (exportersWindow) {
 
-            protocol: 'file:',
-            slashes: true
-        }))
-
-    exportsWindow.on('close', () => {
-
-        if (exportsWindow) {
-
-            exportsWindow.hide()
+            exportersWindow.hide()
+            e.preventDefault()
         }
     })
 
-    bgWindow = new BrowserWindow({
+    workerWindow = new BrowserWindow({
         width: 300,
-        height: 300
+        height: 300,
+        show: false
     })
 
-    bgWindow.loadURL(url.format({
+    workerWindow.loadURL(url.format({
 
-        pathname: path.join(__dirname, 'worker.html'),
+        pathname: path.join(__dirname, 'windows/worker/index.html'),
 
             protocol: 'file:',
-            slashes: true
+            slashes: true,
         }))
 
-    bgWindow.webContents.openDevTools()
 
     // and load the index.html of the app.
-    mainWindow.loadURL(url.format({
+    projectsWindow.loadURL(url.format({
 
-        pathname: path.join(__dirname, 'index.html'),
+        pathname: path.join(__dirname, 'windows/projects/index.html'),
 
             protocol: 'file:',
             slashes: true
         }))
 
     // Open the DevTools.
-    mainWindow.webContents.openDevTools()
+    projectsWindow.webContents.openDevTools()
 
     // Emitted when the window is closed.
-    mainWindow.on('closed', function () {
+    projectsWindow.on('closed', function () {
 
         // Dereference the window object, usually you would store windows
         // in an array if your app supports multi windows, this is the time
         // when you should delete the corresponding element.
-        mainWindow = null
-        bgWindow = null
-        exportsWindow = null
+        projectsWindow = null
+        workerWindow = null
     })
 
     // Wait for the contents to load, then load the projects
-    mainWindow.webContents.on('did-finish-load', () => {
+    projectsWindow.webContents.on('did-finish-load', () => {
 
-        storage.get('projects', (e, projects) => {
+        store
+        .getAllProjects()
+        .then(projects => {
 
-            if (projects) {
+            projectsWindow.webContents.send('projects-loaded', Array.from(projects))
 
-                mainWindow.webContents.send('projects-loaded', Array.from(projects))
+            // Send the project to the compiler
+            if (Object.prototype.toString.call(projects) === '[object Array]') {
 
-                // Send the project to the compiler
-                if (Object.prototype.toString.call(projects) === '[object Array]') {
+                projects.forEach(project => {
 
-                    projects.forEach(project => {
-
-                        bgWindow.webContents.send('create-project', project)
-                    })
-                }
+                    workerWindow.webContents.send('create-project', project)
+                })
             }
         })
     })
@@ -148,51 +130,24 @@ app.on('activate', function () {
 
     // On OS X it's common to re-create a window in the app when the
     // dock icon is clicked and there are no other windows open.
-    if (mainWindow === null) {
+    if (projectsWindow === null) {
         createWindow()
     }
 })
 
 app.on('before-quit', function() {
 
-    exportsWindow = null
+    exportersWindow = null
 })
 
 // communications
-ipcMain.on('create-project', (e, project) => {
+ipcMain.on('showExportersWindow', (e, project) => {
 
-    bgWindow.webContents.send('create-project', project)
+    exportersWindow.webContents.send('setActiveProject', project)
+    exportersWindow.show()
 })
 
-ipcMain.on('show-add-export-window', (e, project) => {
+ipcMain.on('updateProjectExporters', (e, options) => {
 
-    exportsChildWindow.webContents.send('set-project', project)
-    exportsChildWindow.show()
-})
-
-ipcMain.on('add-export-option', (e, options) => {
-
-    exportsChildWindow.hide()
-    exportsWindow.webContents.send('update-project-externals', options)
-})
-
-ipcMain.on('close-add-export-window', () => {
-
-    exportsChildWindow.hide()
-})
-
-ipcMain.on('start-server', (e, id) => {
-
-    bgWindow.webContents.send('start-server', id)
-})
-
-ipcMain.on('show-export-window', (e, project) => {
-
-    exportsWindow.webContents.send('show-export-window', project)
-    exportsWindow.show()
-})
-
-ipcMain.on('notify', (e, message) => {
-
-    mainWindow.webContents.send('notify', message)
+    exportersWindow.webContents.send('updateProjectExporters', options)
 })
