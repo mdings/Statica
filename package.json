@@ -5,10 +5,11 @@
   "version": "1.0.0",
   "main": "main.js",
   "scripts": {
-    "postinstall": "copyfiles darwin-x64-50/* app/node_modules/node-sass/vendor && install-app-deps",
+    "postinstall": "./node_modules/.bin/electron-rebuild",
     "dev": "cross-env NODE_ENV=development webpack-dev-server --inline --hot",
     "build": "cross-env NODE_ENV=production webpack --progress --hide-modules",
-    "start": "electron ./app",
+    "start": "concurrently \"npm run electron\" \"npm run dev\"",
+    "electron": "electron ./app",
     "release": "electron-packager ./app Statica --out=dist && electron-installer-dmg --overwrite ./dist/Statica-darwin-x64/Statica.app Statica"
   },
   "build": {
@@ -36,5 +37,10 @@
     "vue-loader": "^9.7.0",
     "webpack": "^2.1.0-beta.25",
     "webpack-dev-server": "^2.1.0-beta.0"
+  },
+  "dependencies": {
+    "concurrently": "^3.4.0",
+    "electron-rebuild": "^1.5.7",
+    "keytar": "^3.0.2"
   }
 }

@@ -48,14 +48,14 @@ module.exports = class File {
         mkdirp.sync(path.dirname(this.fileInfo.targetDir))
         const inFile = fs.createReadStream(sourcePath)
         const outFile = fs.createWriteStream(targetPath);
-        
-        // Do the actual copying 
+
+        // Do the actual copying
         inFile.pipe(outFile);
     }
 
     write(output, cb) {
         const targetPath = `${this.fileInfo.targetDir}/${this.fileInfo.targetFile}`
-        
+
         // Create the dir if it does not exist yet
         mkdirp.sync(path.dirname(targetPath))
 

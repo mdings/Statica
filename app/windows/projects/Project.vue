@@ -46,17 +46,10 @@
             }))
 
             this.menu.append(new MenuItem({
-                label: 'Deploy to',
-                submenu: [
-                    { label: 'Github' },
-                    { label: 'Azure' },
-                    { type: 'separator' },
-                    { label: 'Manage..',
-                        click() {
-                            ipcRenderer.send('showExportersWindow', vm.project)
-                        }
-                    }
-                ]
+                label: 'Deploy..',
+                click() {
+                    ipcRenderer.send('showExportersWindow', vm.project)
+                }
             }))
 
             this.menu.append(new MenuItem({
@@ -103,7 +96,7 @@
 
             startProject() {
 
-                ipcRenderer.send('start-server', this.project.id)
+                ipcRenderer.send('startServer', this.project.id)
             },
 
             updateProjectName() {

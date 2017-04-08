@@ -41,18 +41,16 @@
                 parent: require('electron').remote.getCurrentWindow()
             })
 
-
-            win.on('hide', (e) => {
+            win.on('hide', e => {
 
                 // Reset the window
                 e.sender.reload()
             })
 
-            win.loadURL(`file://${__dirname}/add/index.html`)
-
             ipcRenderer.on('setActiveProject', (e, project) => {
 
                 this.activeProject = project
+                win.loadURL(`file://${__dirname}/add/index.html?project=${project.id}`)
             })
 
             ipcRenderer.on('updateProjectExporters', (e, options) => {

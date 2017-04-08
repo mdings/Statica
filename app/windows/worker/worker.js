@@ -9,15 +9,14 @@ ipcRenderer.on('create-project', (e, project) => {
     projects.push(new Statica(project))
 })
 
-ipcRenderer.on('start-server', (e, id) => {
+ipcRenderer.on('startServer', (e, id) => {
 
     // find the project from the array
-    const project = projects.find((item) => {
+    const project = projects.find(item => {
 
       return item.project.id == id
     })
 
-    console.log(project)
     if (project) {
 
         project.launch()

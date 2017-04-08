@@ -50,7 +50,7 @@ module.exports = class Compiler {
 
     change(filename) {
 
-        // / Get the extension
+        // Get the extension
         const ext = path.extname(filename).toLowerCase().slice(1)
 
         // Filter the files bases on their type

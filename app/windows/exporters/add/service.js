@@ -1,18 +1,34 @@
 const store = require('../../../store')
+const $ = require('../../../utils').$
+const e = require('../../../utils').e
 const {ipcRenderer} = require('electron')
 const remote = require('electron').remote
+const options = $('[data-service]')
+const project = global.location.search.replace(/\?project\=/i, '')
 
+
+console.log(project)
 // Close button
-document.querySelector('[data-close-exports]').addEventListener('click', () => {
+e($('[data-close-exports]'), e => {
 
     remote.getCurrentWindow().hide()
 })
 
+e(options, 'change', e => {
+
+    console.log(e)
+})
+
 // Add to externals
-document.querySelector('[data-exports-add]').addEventListener('click', () => {
+e($('[data-exports-add]'), e => {
+
+    const value = options[options.selectedIndex].value
 
     ipcRenderer.send('updateProjectExporters', {
-        name: 'Github Pages'
+
+        id: project,
+        name: options[options.selectedIndex].value,
+        password: $('[data-ftp-password]').value
     })
 
     // First update, hide the sheet

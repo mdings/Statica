@@ -3,6 +3,9 @@ const {ipcMain,app, BrowserWindow} = require('electron')
 const path = require('path')
 const url = require('url')
 const store = require('./store')
+const keytar = require('keytar')
+
+console.log(keytar)
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -54,7 +57,7 @@ function createWindow () {
     workerWindow = new BrowserWindow({
         width: 300,
         height: 300,
-        show: false
+        show: true
     })
 
     workerWindow.loadURL(url.format({
@@ -65,6 +68,7 @@ function createWindow () {
             slashes: true,
         }))
 
+    workerWindow.webContents.openDevTools()
 
     // and load the index.html of the app.
     projectsWindow.loadURL(url.format({
@@ -147,7 +151,20 @@ ipcMain.on('showExportersWindow', (e, project) => {
     exportersWindow.show()
 })
 
+
+ipcMain.on('startServer', (e, project) => {
+
+    workerWindow.webContents.send('startServer', project)
+})
+
 ipcMain.on('updateProjectExporters', (e, options) => {
+
+    if (options.password) {
+
+        console.log(options)
+        // Keytar can only run from the main process
+        keytar.replacePassword(`statica:${options.id}`, options.name, options.password)
+    }
 
     exportersWindow.webContents.send('updateProjectExporters', options)
 })
