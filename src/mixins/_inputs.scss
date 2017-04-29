@@ -1,0 +1,26 @@
+input,
+button {
+
+    padding: 0 8px;
+    height: 24px;
+    line-height: 24px;
+    background-color: #fcfcfc;
+    background-image: linear-gradient(to bottom,#fcfcfc 0,#f1f1f1 100%);
+    background-color: #c2c0c2 #c2c0c2 #a19fa1;
+    color: #333;
+    border: 1px solid transparent;
+    border-color: #c2c0c2 #c2c0c2 #a19fa1;
+    box-shadow: 0 1px 1px rgba(0,0,0,.06);
+    border-radius: 4px;
+    font-size: 13px;
+}
+
+button {
+
+    &:active {
+
+        background-color: #ddd;
+        background-image: none;
+    }
+}
+
