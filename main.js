@@ -31,11 +31,11 @@ function createWindow () {
 
     if (process.env.NODE_ENV === 'development') {
 
-        exportersWindow.loadURL(`http://localhost:8080/exporters.html`)
+        exportersWindow.loadURL(`http://localhost:8080/services.html`)
 
     } else {
 
-        exportersWindow.loadURL(`file://${__dirname}/exporters.html`)
+        exportersWindow.loadURL(`file://${__dirname}/services.html`)
     }
 
     exportersWindow.on('close', (e) => {
@@ -166,10 +166,10 @@ ipcMain.on('updateProjectExporters', (e, options) => {
 
     if (options.password) {
 
-        console.log(options)
         // Keytar can only run from the main process
         keytar.replacePassword(`statica:${options.id}`, options.name, options.password)
     }
 
-    exportersWindow.webContents.send('updateProjectExporters', options)
+    projectsWindow.webContents.send('refreshProjects', options)
+    // exportersWindow.webContents.send('updateProjectExporters', options)
 })

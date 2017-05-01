@@ -1,11 +1,11 @@
 <template>
-    <div>{{exporter.name}}</div>
+    <div>{{service.name}}</div>
 </template>
 
 <script>
     export default {
 
-        props: ['exporter'],
+        props: ['service'],
 
         created() {
 

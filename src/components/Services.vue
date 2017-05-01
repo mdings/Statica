@@ -1,7 +1,7 @@
 <template>
     <div>
         <div class="exporters">
-            <Exporter v-for="exporter in activeProject.exporters" :exporter="exporter"></Exporter>
+            <Service v-for="exporter in activeProject.exporters" :service="exporter"></Service>
         </div>
         <button @click="addExporter">Add</button>
     </div>
@@ -14,12 +14,12 @@
     const {BrowserWindow} = require('electron').remote
     let win
 
-    import Exporter from './Exporter.vue'
+    import Service from './Service.vue'
 
     export default {
 
         components: {
-            Exporter
+            Service
         },
 
         data() {
@@ -50,7 +50,16 @@
             ipcRenderer.on('setActiveProject', (e, project) => {
 
                 this.activeProject = project
-                win.loadURL(`file://${__dirname}/add/index.html?project=${project.id}`)
+                // and load the index.html of the app.
+                if (process.env.NODE_ENV === 'development') {
+
+                    win.loadURL(`http://localhost:8080/inputs.html?project=${project.id}`)
+
+                } else {
+
+                    win.loadURL(`file://${__dirname}/inputs.html?project=${project.id}`)
+                }
+
             })
 
             ipcRenderer.on('updateProjectExporters', (e, options) => {

@@ -4,7 +4,8 @@ var webpack = require('webpack')
 module.exports = {
   entry: {
     projects: './src/projects.js',
-    exporters: './src/exporters.js',
+    services: './src/services.js',
+    inputs: './src/inputs.js',
   },
   output: {
     path: path.resolve(__dirname, './dist'),
