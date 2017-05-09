@@ -31,9 +31,13 @@
 
             // listen for the open dialog command
             this.$root.$on('open-dialog', this.openDialog)
+
+            // @TODO: move these two to project component and handle the operations by the store. Also saves some communication
             this.$root.$on('remove-project', this.removeProject)
             this.$root.$on('update-project', this.updateProject)
+
             ipcRenderer.on('projects-loaded', this.loadProjects)
+            ipcRenderer.on('update-projects', this.updateProjects)
 
             this.$watch('projects', (newVal, oldVal) => {
 
@@ -71,6 +75,7 @@
             loadProjects(e, projects) {
 
                 this.projects = projects
+                console.log('projects loaded')
             },
 
             addProject(folder, name) {
@@ -90,11 +95,21 @@
 
                     this.projects.push(project)
 
-                    ipcRenderer.send('create-project', project)
+                    // ipcRenderer.send('create-project', project)
 
                     // Persist to db
                     store.setAllProjects(this.projects)
                 }
+            },
+
+            updateProjects() {
+
+                store.getAllProjects().then(projects => {
+
+                    this.projects = projects
+                })
+
+                console.log('updating projects')
             },
 
             updateProject() {

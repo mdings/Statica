@@ -162,14 +162,16 @@ ipcMain.on('startServer', (e, project) => {
     workerWindow.webContents.send('startServer', project)
 })
 
-ipcMain.on('updateProjectExporters', (e, options) => {
+ipcMain.on('storePassword', (e, details) => {
 
-    if (options.password) {
-
-        // Keytar can only run from the main process
-        keytar.replacePassword(`statica:${options.id}`, options.name, options.password)
-    }
-
-    projectsWindow.webContents.send('refreshProjects', options)
-    // exportersWindow.webContents.send('updateProjectExporters', options)
+    keytar.replacePassword(`statica:${details.project}`, details.id, details.password)
 })
+
+ipcMain.on('updateProjects', (e, id) => {
+
+    console.log('updating project')
+    projectsWindow.webContents.send('update-projects', id)
+    exportersWindow.webContents.send('update-projects', id)
+})
+
+

@@ -50,6 +50,7 @@
             ipcRenderer.on('setActiveProject', (e, project) => {
 
                 this.activeProject = project
+
                 // and load the index.html of the app.
                 if (process.env.NODE_ENV === 'development') {
 
@@ -62,10 +63,13 @@
 
             })
 
-            ipcRenderer.on('updateProjectExporters', (e, options) => {
+            ipcRenderer.on('update-projects', (e, id) => {
 
-                store.setProjectById(this.activeProject)
-                this.activeProject.exporters.push(options)
+                store.getProjectById(id).then(project => {
+
+                    console.log(project)
+                    this.activeProject = project
+                })
             })
         },
 
