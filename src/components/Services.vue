@@ -1,7 +1,7 @@
 <template>
     <div>
         <div class="exporters">
-            <Service v-for="exporter in activeProject.exporters" :service="exporter" v-bind:class="{active: exporter == activeService}"></Service>
+            <Service v-for="service in services" :service="service" v-bind:class="{active: service == activeService}"></Service>
         </div>
         <button @click="addExporter">Add</button>
         <button @click="removeExporter" v-bind:disabled="!activeService">Remove</button>
@@ -28,8 +28,9 @@
 
             return {
 
+                services: [],
+                activeProject: null,
                 activeService: null,
-                activeProject: {}
             }
         },
 
@@ -53,6 +54,7 @@
             ipcRenderer.on('setActiveProject', (e, project) => {
 
                 this.activeProject = project
+                this.services = project.services
 
                 // and load the index.html of the app.
                 if (process.env.NODE_ENV === 'development') {
@@ -66,13 +68,9 @@
 
             })
 
-            ipcRenderer.on('update-projects', (e, id) => {
+            ipcRenderer.on('update-projects', (e, project) => {
 
-                store.getProjectById(id).then(project => {
-
-                    console.log(project)
-                    this.activeProject = project
-                })
+                this.services = project.services
             })
 
             this.$root.$on('setActiveService', service => {
@@ -90,6 +88,15 @@
 
             removeExporter() {
 
+                const services = this.services.filter(service => {
+
+                    return service != this.activeService
+                })
+
+                this.activeService = null
+                this.activeProject.services = services
+                store.setProjectById(this.activeProject)
+                ipcRenderer.send('updateProjects', this.activeProject)
             },
 
             editExporter() {
@@ -108,13 +115,13 @@
 
     .exporters {
 
-        border: 1px solid red;
+        border: 1px solid blue;
         width: 400px;
         height: 200px;
     }
 
     .active {
 
-        background-color: blue;
+        background-color: orange;
     }
 </style>

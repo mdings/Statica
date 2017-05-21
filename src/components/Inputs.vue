@@ -7,7 +7,9 @@
 
         <!-- Github pages -->
         <div v-show="exporter == 'github'">
-        Github pages
+            <input type="text" name="title" placeholder="title">
+            <input type="text" name="username" placeholder="username">
+            <input type="password" name="password">
         </div>
         <!-- /Github pages -->
 
@@ -83,7 +85,7 @@
                     })
 
                     // Add the exporter to the retrieved project
-                    project.exporters.push(exporter)
+                    project.services.push(exporter)
                     store.setProjectById(project)
                     ipcRenderer.send('updateProjects', this.project)
 

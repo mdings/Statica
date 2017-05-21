@@ -49,19 +49,23 @@ const getProjectById = (id) => {
 
 const setProjectById = (project) => {
 
-    getAllProjects()
-    .then(projects => {
+    return new Promse((resolve, reject) => {
 
-        for (var i in projects) {
+        getAllProjects()
+        .then(projects => {
 
-            if (projects[i].id == project.id) {
+            for (var i in projects) {
 
-                projects[i] = project
-                break
+                if (projects[i].id == project.id) {
+
+                    projects[i] = project
+                    break
+                }
             }
-        }
 
-        setAllProjects(projects)
+            setAllProjects(projects)
+            resolve(project)
+        })
     })
 }
 

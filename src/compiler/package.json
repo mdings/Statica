@@ -6,7 +6,7 @@
   "main": "main.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "postinstall": "copyfiles darwin-x64-53/* node_modules/node-sass/vendor"
+    "postinstall": "copyfiles ../../darwin-x64-53/* node_modules/node-sass/vendor"
   },
   "keywords": [],
   "license": "ISC",

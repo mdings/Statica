@@ -89,7 +89,7 @@
                         id: require('shortid').generate(),
                         name: path.basename(folder),
                         path: folder,
-                        exporters: [],
+                        services: [],
                         isRunning: false
                     }
 
