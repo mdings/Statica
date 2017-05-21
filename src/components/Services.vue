@@ -1,9 +1,11 @@
 <template>
     <div>
         <div class="exporters">
-            <Service v-for="exporter in activeProject.exporters" :service="exporter"></Service>
+            <Service v-for="exporter in activeProject.exporters" :service="exporter" v-bind:class="{active: exporter == activeService}"></Service>
         </div>
         <button @click="addExporter">Add</button>
+        <button @click="removeExporter" v-bind:disabled="!activeService">Remove</button>
+        <button @click="editExporter" v-bind:disabled="!activeService">Edit</button>
     </div>
 </template>
 
@@ -26,7 +28,8 @@
 
             return {
 
-                activeProject: [],
+                activeService: null,
+                activeProject: {}
             }
         },
 
@@ -71,6 +74,11 @@
                     this.activeProject = project
                 })
             })
+
+            this.$root.$on('setActiveService', service => {
+
+                this.activeService = service
+            })
         },
 
         methods: {
@@ -78,6 +86,19 @@
             addExporter() {
 
                 win.show()
+            },
+
+            removeExporter() {
+
+            },
+
+            editExporter() {
+
+            },
+
+            selectService() {
+
+                console.log('ok')
             }
         }
     }
@@ -90,5 +111,10 @@
         border: 1px solid red;
         width: 400px;
         height: 200px;
+    }
+
+    .active {
+
+        background-color: blue;
     }
 </style>

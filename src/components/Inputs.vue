@@ -2,8 +2,6 @@
     <div>
         <select @change="changeExporter">
             <option value="github">Github pages</option>
-            <option value="azure">Microsoft Azure</option>
-            <option value="heroku">Heroku</option>
             <option value="ftp">FTP</option>
         </select>
 
@@ -13,22 +11,9 @@
         </div>
         <!-- /Github pages -->
 
-        <!-- Microsoft azure -->
-        <div v-show="exporter == 'azure'">
-        Microsoft azure
-        </div>
-        <!-- /Microsoft azure -->
-
-        <!-- Heroku -->
-        <div v-show="exporter == 'heroku'" data-heroku>
-            <input type="text" name="username" placeholder="username">
-            <input type="password" name="password">
-            <input type="text" name="server">
-        </div>
-        <!-- /Heroku -->
-
         <!-- FTP credentials -->
         <div v-show="exporter == 'ftp'" data-ftp>
+            <input type="text" name="title" placeholder="title">
             <input type="text" name="username" placeholder="username">
             <input type="password" name="password">
         </div>
@@ -45,44 +30,6 @@
     const remote = require('electron').remote
     const store = require('../store')
 
-    // const store = require('./store')
-    // const $ = require('./utils').$
-    // const e = require('./utils').e
-    // const {ipcRenderer} = require('electron')
-    // const remote = require('electron').remote
-    // const options = $('[data-service]')
-    // const project = global.location.search.replace(/\?project\=/i, '')
-    // const keytar = require('keytar')
-
-    // // Close button
-    // e($('[data-close-exports]'), e => {
-
-    //     remote.getCurrentWindow().hide()
-    // })
-
-    // e(options, 'change', e => {
-
-    //     console.log(e)
-    // })
-
-    // // Add to externals
-    // e($('[data-exports-add]'), e => {
-
-    //     const value = options[options.selectedIndex].value
-
-    //     ipcRenderer.send('updateProjectExporters', {
-
-    //         id: project,
-    //         name: options[options.selectedIndex].value,
-    //         password: $('[data-ftp-password]').value
-    //     })
-
-    //     // First update, hide the sheet
-    //     setTimeout(() => {
-
-    //         remote.getCurrentWindow().hide()
-    //     }, 10)
-    // })
     export default {
 
         data() {

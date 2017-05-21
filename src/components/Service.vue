@@ -1,5 +1,5 @@
 <template>
-    <div>{{service.name}}</div>
+    <div @click="setActiveService(service)">{{service.name}}</div>
 </template>
 
 <script>
@@ -9,6 +9,14 @@
 
         created() {
 
+        },
+
+        methods: {
+
+            setActiveService(service) {
+
+                this.$root.$emit('setActiveService', service)
+            }
         }
     }
 </script>
