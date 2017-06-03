@@ -5,7 +5,6 @@ module.exports = {
   entry: {
     projects: './src/projects.js',
     services: './src/services.js',
-    inputs: './src/inputs.js',
   },
   output: {
     path: path.resolve(__dirname, './dist'),

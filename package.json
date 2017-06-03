@@ -49,8 +49,13 @@
     "webpack-dev-server": "^2.1.0-beta.0"
   },
   "dependencies": {
+    "easy-ftp": "^0.3.28",
     "electron-json-storage": "^3.0.5",
+    "ftp-client": "^0.2.2",
+    "ftp-deploy": "^1.2.1",
+    "gh-pages": "^1.0.0",
     "keytar": "^3.0.2",
-    "require-dir": "^0.3.1"
+    "require-dir": "^0.3.1",
+    "vee-validate": "^2.0.0-rc.5"
   }
 }

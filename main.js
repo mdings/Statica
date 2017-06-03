@@ -25,6 +25,7 @@ function createWindow () {
         height: 500,
         minimizable: false,
         maximizable: false,
+        frame: false,
         fullscreenable: false,
         show: false
     })
@@ -42,6 +43,7 @@ function createWindow () {
 
         if (exportersWindow) {
 
+            exportersWindow.webContents.send('emptyServices')
             exportersWindow.hide()
             e.preventDefault()
         }
@@ -50,7 +52,7 @@ function createWindow () {
     workerWindow = new BrowserWindow({
         width: 300,
         height: 300,
-        show: true
+        show: false
     })
 
     workerWindow.loadURL(url.format({
@@ -61,7 +63,7 @@ function createWindow () {
         slashes: true,
     }))
 
-    workerWindow.webContents.openDevTools()
+    // workerWindow.webContents.openDevTools()
 
     // Create the browser window.
     projectsWindow = new BrowserWindow({
@@ -164,14 +166,18 @@ ipcMain.on('startServer', (e, project) => {
 
 ipcMain.on('storePassword', (e, details) => {
 
-    keytar.replacePassword(`statica:${details.project}`, details.id, details.password)
+    keytar.replacePassword('statica', details.serviceId, details.password)
 })
 
-ipcMain.on('updateProjects', (e, id) => {
+ipcMain.on('retrievePassword', (e, details) => {
 
-    console.log('updating project')
-    projectsWindow.webContents.send('update-projects', id)
-    exportersWindow.webContents.send('update-projects', id)
+    const password = keytar.getPassword(`statica`, details.serviceId)
+    exportersWindow.webContents.send('retrievePassword', password)
+})
+
+ipcMain.on('reloadActiveProject', e => {
+
+    exportersWindow.webContents.send('reloadActiveProject')
 })
 
 

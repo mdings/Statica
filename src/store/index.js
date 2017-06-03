@@ -24,9 +24,19 @@ const getAllProjects = () => {
 
 const setAllProjects = (projects) => {
 
-    storage.set('projects', projects, (e) => {
+    return new Promise((resolve, reject) => {
 
-        if (e) throw e
+        storage.set('projects', projects, (e) => {
+
+            if (e) {
+
+                reject(e)
+
+            } else {
+
+                resolve()
+            }
+        })
     })
 }
 
@@ -49,7 +59,7 @@ const getProjectById = (id) => {
 
 const setProjectById = (project) => {
 
-    return new Promse((resolve, reject) => {
+    return new Promise((resolve, reject) => {
 
         getAllProjects()
         .then(projects => {
@@ -63,8 +73,10 @@ const setProjectById = (project) => {
                 }
             }
 
-            setAllProjects(projects)
-            resolve(project)
+            setAllProjects(projects).then(() => {
+
+                resolve()
+            })
         })
     })
 }

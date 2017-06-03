@@ -37,7 +37,6 @@
             this.$root.$on('update-project', this.updateProject)
 
             ipcRenderer.on('projects-loaded', this.loadProjects)
-            ipcRenderer.on('update-projects', this.updateProjects)
 
             this.$watch('projects', (newVal, oldVal) => {
 
@@ -100,16 +99,6 @@
                     // Persist to db
                     store.setAllProjects(this.projects)
                 }
-            },
-
-            updateProjects() {
-
-                store.getAllProjects().then(projects => {
-
-                    this.projects = projects
-                })
-
-                console.log('updating projects')
             },
 
             updateProject() {

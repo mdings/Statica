@@ -1,27 +1,47 @@
 <template>
-    <div>
-        <div class="exporters">
-            <Service v-for="service in services" :service="service" v-bind:class="{active: service == activeService}"></Service>
+    <div id="exporters">
+        <header>
+            <ul>
+                <li></li>
+                <li></li>
+                <li></li>
+            </ul>
+            <span>Deploy..</span>
+        </header>
+        <div class="body">
+            <div class="exporters">
+                <Service v-for="service in services" :service="service" :class="{'active': service == activeService}"></Service>
+            </div>
+            <div class="form" :class="{'visible': isAdding}">
+                <Inputs :project="activeProject"></Inputs>
+            </div>
         </div>
-        <button @click="addExporter">Add</button>
-        <button @click="removeExporter" v-bind:disabled="!activeService">Remove</button>
-        <button @click="editExporter" v-bind:disabled="!activeService">Edit</button>
+        <div class="actions">
+            <button @click="addExporter">+</button>
+            <button @click="removeExporter" v-bind:disabled="!activeService">-</button>
+            <button @click="editExporter" v-bind:disabled="!activeService">...</button>
+            <button @click="useExporter" v-bind:disabled="!activeService">^</button>
+        </div>
+        <div class="progress" :class="{'is-active': isExporting}"></div>
     </div>
 </template>
 
 <script>
 
     const store = require('../store')
+    const exporters = require('../utils/exporters')
     const {ipcRenderer} = require('electron')
     const {BrowserWindow} = require('electron').remote
     let win
 
     import Service from './Service.vue'
+    import Inputs from './Inputs.vue'
 
     export default {
 
         components: {
-            Service
+            Service,
+            Inputs
         },
 
         data() {
@@ -29,6 +49,8 @@
             return {
 
                 services: [],
+                isAdding: false,
+                isExporting: false,
                 activeProject: null,
                 activeService: null,
             }
@@ -36,46 +58,49 @@
 
         created() {
 
-            // Create the small window to add exporter
-            win = new BrowserWindow({
-                width: 300,
-                height: 400,
-                show: false,
-                modal: true,
-                parent: require('electron').remote.getCurrentWindow()
-            })
+            ipcRenderer.on('emptyServices', () => {
 
-            win.on('hide', e => {
-
-                // Reset the window
-                e.sender.reload()
+                this.services = []
             })
 
             ipcRenderer.on('setActiveProject', (e, project) => {
 
-                this.activeProject = project
-                this.services = project.services
+                // Re-retrieve the project from storage
+                store.getProjectById(project.id).then(project => {
 
-                // and load the index.html of the app.
-                if (process.env.NODE_ENV === 'development') {
-
-                    win.loadURL(`http://localhost:8080/inputs.html?project=${project.id}`)
-
-                } else {
-
-                    win.loadURL(`file://${__dirname}/inputs.html?project=${project.id}`)
-                }
+                    this.activeProject = project
+                    this.activeService = project.services[0]
+                    this.services = project.services
+                })
 
             })
 
-            ipcRenderer.on('update-projects', (e, project) => {
+            ipcRenderer.on('retrievePassword', (e, pass) => {
 
-                this.services = project.services
+                // This is when we get the signal back from the main project with the password/
+                // So we can go ahead and use the service to deploy against
+                const type = this.activeService.type
+                exporters[type](this.activeProject, this.activeService)
+            })
+
+            ipcRenderer.on('reloadActiveProject', e => {
+
+                // Re-retrieve the project from storage because updates have been made in a different window
+                store.getProjectById(this.activeProject.id).then(project => {
+
+                    console.log(project)
+                    this.services = project.services
+                })
             })
 
             this.$root.$on('setActiveService', service => {
 
                 this.activeService = service
+            })
+
+            this.$root.$on('closeProjectPanel', e => {
+
+                this.isAdding = false
             })
         },
 
@@ -83,7 +108,7 @@
 
             addExporter() {
 
-                win.show()
+                this.isAdding = !this.isAdding
             },
 
             removeExporter() {
@@ -95,12 +120,23 @@
 
                 this.activeService = null
                 this.activeProject.services = services
+                this.services = services
                 store.setProjectById(this.activeProject)
-                ipcRenderer.send('updateProjects', this.activeProject)
             },
 
             editExporter() {
 
+                this.isExporting = !this.isExporting
+            },
+
+            useExporter() {
+
+                console.log(this.activeService)
+                // Send a signal to the main process to safely retrieve the password from Keytar
+                ipcRenderer.send('retrievePassword', {
+
+                    serviceId: this.activeService.id
+                })
             },
 
             selectService() {
@@ -113,15 +149,141 @@
 
 <style lang="sass">
 
-    .exporters {
+    *,
+    *:before,
+    *:after {
 
-        border: 1px solid blue;
-        width: 400px;
-        height: 200px;
+        margin: 0;
+        padding: 0;
+        outline: none;
+        box-sizing: border-box;
     }
 
-    .active {
+    body {
 
-        background-color: orange;
+        font-family: system,-apple-system,".SFNSDisplay-Regular","Helvetica Neue",Helvetica,"Segoe UI",sans-serif;
+    }
+
+    header {
+
+        width: 100%;
+        height: 25px;
+        -webkit-app-region: drag;
+        border-bottom: 1px solid #f1f1f1;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex: 0 0 25px;
+
+        ul {
+
+            display: flex;
+            margin-left: 10px;
+            list-style: none;
+
+            li {
+
+                width: 11px;
+                height: 11px;
+                border-radius: 50%;
+                margin: 0 2px;
+                border: 1px solid #ccc;
+            }
+        }
+
+        span {
+
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 13px;
+            color: #555;
+        }
+    }
+
+    #exporters {
+
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        height: 100vh;
+        overflow: hidden;
+    }
+
+    .body {
+
+        flex: 1;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .exporters {
+
+        padding: 5px;
+        user-select: none;
+        cursor: default;
+        height: 100%;
+        overflow: scroll;
+
+        & > div {
+            font-size: 14px;
+            border-radius: 3px;
+            padding: 10px 20px;
+
+            &.active {
+
+                background-color: #BCDDF6;
+            }
+        }
+    }
+
+    .form {
+
+        padding: 5px;
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        overflow: auto;
+        transform: translateY(100%);
+        background-color: #f5f5f5;
+        transition: transform 100ms cubic-bezier(0.17, 0.67, .98, 1);
+
+        &.visible {
+
+            transform: translateY(0%);
+        }
+    }
+
+    .actions {
+
+        display: flex;
+        justify-content: space-between;
+        border-top: 1px solid #f1f1f1;
+        background-color: #fff;
+
+        & > * {
+
+            border: none;
+            background: transparent;
+            outline: none;
+            flex: 0 0 25%;
+            height: 30px;
+        }
+    }
+
+    .progress {
+
+        max-height: 0px;
+        height: 20px;
+        overflow: hidden;
+        background-color: #333;
+        transition: max-height 100ms cubic-bezier(0.455, 0.030, 0.515, 0.955);
+
+        &.is-active {
+
+            max-height: 20px;
+        }
     }
 </style>

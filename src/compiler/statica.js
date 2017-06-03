@@ -25,7 +25,8 @@ module.exports = class Compiler {
         this.project = project
         this.browsersync = require('browser-sync').create(project.id);
         this.sourceDir = project.path
-        this.targetDir = `${app.getPath('userData')}/temp/${project.id}`
+        // this.targetDir = `${app.getPath('userData')}/temp/${project.id}`
+        this.targetDir = `${this.sourceDir}/build`
 
         chokidar.watch(this.sourceDir, {ignored: ignored(this.sourceDir, this.targetDir)})
             .on('add', filename => this.createFile(path.normalize(filename)))
@@ -79,12 +80,12 @@ module.exports = class Compiler {
 
         if (!this.browsersync.active) {
 
-            const targetDir = `${app.getPath('userData')}/temp/${this.project.id}`
+            // const targetDir = `${app.getPath('userData')}/temp/${this.project.id}`
 
             this.browsersync.init({
                 ui: false,
                 notify: false,
-                server: targetDir
+                server: this.targetDir
             });
         }
     }
