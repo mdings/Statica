@@ -37,6 +37,7 @@
             this.$root.$on('update-project', this.updateProject)
 
             ipcRenderer.on('projects-loaded', this.loadProjects)
+            ipcRenderer.on('reload-projects', this.reloadProjects)
 
             this.$watch('projects', (newVal, oldVal) => {
 
@@ -77,6 +78,11 @@
                 console.log('projects loaded')
             },
 
+            reloadProjects(e, projects) {
+
+                this.projects = projects
+            },
+
             addProject(folder, name) {
 
                 // check if the added path is actually a directory
@@ -94,7 +100,7 @@
 
                     this.projects.push(project)
 
-                    // ipcRenderer.send('create-project', project)
+                    ipcRenderer.send('create-compiler', project)
 
                     // Persist to db
                     store.setAllProjects(this.projects)
@@ -114,6 +120,8 @@
                 })
 
                 store.setAllProjects(this.projects)
+
+                ipcRenderer.send('remove-compiler', project)
             },
 
             openDialog() {

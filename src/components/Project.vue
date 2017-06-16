@@ -1,5 +1,5 @@
 <template>
-    <div class="project">
+    <div class="project" v-bind:class="{unlinked: project.unlinked}">
         <div class="project__icon">
             <svg height="32" viewBox="0 0 32 32" width="32" xmlns="http://www.w3.org/2000/svg"><title/><path d="M17 9l-2-4H4.003C2.897 5 2 5.89 2 6.99v18.02c0 1.1.9 1.99 1.993 1.99h25.014c1.1 0 1.993-.893 1.993-1.995v-14.01C31 9.893 30.103 9 28.994 9H17zm-.64 1L14.4 6H3.992C3.444 6 3 6.455 3 6.992v18.016c0 .548.446.992.993.992h25.014c.548 0 .993-.445.993-1V11c0-.552-.454-1-1.003-1H16.36z" fill-rule="evenodd"/></svg>
         </div>
@@ -154,16 +154,21 @@
 
     .project {
 
-        padding: 15px 10px;
-        border-bottom: 1px solid #ccc;
+        padding: 15px 10px 15px 25px;
+        border-bottom: 1px solid #f1f1f1;
         font-size: 13px;
         display: flex;
         justify-content: space-between;
-        background-color: #f5f5f4;
+
+        &.unlinked {
+
+            background-color: red
+        }
     }
 
     .project__icon {
 
+        display: none;
         width: 25px;
         align-self: center;
         flex-shrink: 0;
@@ -174,17 +179,23 @@
         }
     }
 
+    .project__info {
+
+        max-width: 100%;
+        overflow: hidden;
+    }
+
     .project__name {
 
         cursor: default;
         -webkit-user-select: none;
         white-space: nowrap;
-        width: 200px;
-        max-width: 200px;
         overflow: hidden;
         position: relative;
         text-overflow: ellipsis;
-        font-size: 16px;
+        font-size: 18px;
+        color: #333;
+        width: 100%;
 
         &[contenteditable="true"] {
 
@@ -200,13 +211,13 @@
     .project__path {
 
         cursor: default;
-        width: 200px;
-        max-width: 200px;
         margin-top: 4px;
         overflow: hidden;
         white-space: nowrap;
         text-overflow: ellipsis;
         font-size: 12px;
+        color: #666;
+        width: 100%;
         -webkit-user-select: none;
     }
 
@@ -214,6 +225,7 @@
 
         flex-shrink: 0;
         align-self: center;
+        margin-left: 15px;
 
         svg {
 

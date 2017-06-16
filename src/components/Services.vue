@@ -1,12 +1,8 @@
 <template>
     <div id="exporters">
         <header>
-            <ul>
-                <li></li>
-                <li></li>
-                <li></li>
-            </ul>
-            <span>Deploy..</span>
+            <TrafficLights></TrafficLights>
+            <span class="title">Deploy to..</span>
         </header>
         <div class="body">
             <div class="exporters">
@@ -34,12 +30,17 @@
     const {BrowserWindow} = require('electron').remote
     let win
 
+    import TrafficLights from './TrafficLights.vue'
+    import Titlebar from './Titlebar.vue'
     import Service from './Service.vue'
     import Inputs from './Inputs.vue'
 
     export default {
 
         components: {
+
+            TrafficLights,
+            Titlebar,
             Service,
             Inputs
         },
@@ -49,6 +50,7 @@
             return {
 
                 services: [],
+                html: '',
                 isAdding: false,
                 isExporting: false,
                 activeProject: null,
@@ -56,7 +58,13 @@
             }
         },
 
+        mounted() {
+
+        },
+
         created() {
+
+            this.html = document.getElementById('titlebar')
 
             ipcRenderer.on('emptyServices', () => {
 
@@ -149,47 +157,13 @@
 
 <style lang="sass">
 
-    *,
-    *:before,
-    *:after {
-
-        margin: 0;
-        padding: 0;
-        outline: none;
-        box-sizing: border-box;
-    }
-
-    body {
-
-        font-family: system,-apple-system,".SFNSDisplay-Regular","Helvetica Neue",Helvetica,"Segoe UI",sans-serif;
-    }
+    @import "src/mixins/header";
+    @import "src/mixins/reset";
 
     header {
 
-        width: 100%;
         height: 25px;
-        -webkit-app-region: drag;
-        border-bottom: 1px solid #f1f1f1;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
         flex: 0 0 25px;
-
-        ul {
-
-            display: flex;
-            margin-left: 10px;
-            list-style: none;
-
-            li {
-
-                width: 11px;
-                height: 11px;
-                border-radius: 50%;
-                margin: 0 2px;
-                border: 1px solid #ccc;
-            }
-        }
 
         span {
 
@@ -197,7 +171,7 @@
             left: 50%;
             transform: translateX(-50%);
             font-size: 13px;
-            color: #555;
+            color: #222;
         }
     }
 

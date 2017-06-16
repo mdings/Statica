@@ -83,24 +83,11 @@
 
 <style lang="sass">
 
-    *,
-    *:before,
-    *:after {
-
-        margin: 0;
-        padding: 0;
-        outline: none;
-        box-sizing: border-box;
-    }
-
-    body {
-
-        font-family: system,-apple-system,".SFNSDisplay-Regular","Helvetica Neue",Helvetica,"Segoe UI",sans-serif;
-    }
+    @import "src/mixins/reset";
 
     main {
 
-        min-height: 100vh;
+        height: 100vh;
         display: flex;
         flex-direction: column;
         -webkit-app-region: drag;

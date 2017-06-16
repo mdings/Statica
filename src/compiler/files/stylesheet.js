@@ -9,11 +9,12 @@ const File = require('../file')
 module.exports = class Stylesheet extends File {
 
     constructor(filepath, sourceDir, targetDir) {
+
         super(filepath, sourceDir, targetDir)
     }
 
     render(resolve, reject) {
-        console.log(`rendering stylesheet: ${this.fileInfo.sourceFile}`)
+        console.log(`rendering stylesheet: ${this.fileInfo.base}`)
         this.resolve = resolve
         this.reject = reject
 
@@ -25,7 +26,7 @@ module.exports = class Stylesheet extends File {
             const output = sass
                 .renderSync({
                     data: this.input,
-                    includePaths: [this.fileInfo.sourceDir]
+                    includePaths: [this.fileInfo.dir]
                 }).css.toString('utf8')
 
             this.process(output)
@@ -52,14 +53,15 @@ module.exports = class Stylesheet extends File {
     }
 
     get exportExtension() {
-        return 'css'
+
+        return '.css'
     }
 
     get isStylus() {
-        return this.fileInfo.extension == 'styl'
+        return this.fileInfo.ext == '.styl'
     }
 
     get isSass() {
-        return this.fileInfo.extension == 'scss'
+        return this.fileInfo.ext == '.scss'
     }
 }

@@ -4,6 +4,7 @@ const extensions  = require('./extensions')
 const fileTypes  = require('require-dir')('./files')
 const ignored = require('./ignored')
 const {app} = require('electron').remote
+const {ipcRenderer} = require('electron')
 
 function hasUnderscore(filename) {
 
@@ -28,18 +29,29 @@ module.exports = class Compiler {
         // this.targetDir = `${app.getPath('userData')}/temp/${project.id}`
         this.targetDir = `${this.sourceDir}/build`
 
-        chokidar.watch(this.sourceDir, {ignored: ignored(this.sourceDir, this.targetDir)})
+        this.watcher = chokidar.watch(this.sourceDir, {ignored: ignored(this.sourceDir, this.targetDir)})
             .on('add', filename => this.createFile(path.normalize(filename)))
+            .on('unlink', filename => this.removeFile(path.normalize(filename)))
+            .on('unlinkDir', dirname => this.checkDir(path.normalize(dirname)))
             .on('change', filename => this.change(filename))
             .on('ready', () => {
 
-                console.log(this.files)
+                console.log(this.watcher.getWatched())
+                // console.log(this.files)
             })
     }
 
+    /**
+     * Creates a new file class, adds it to the files array and renders the file immediately
+     * @constructor
+     * @param {string} filename - The name of the file
+     */
+
     createFile(filename) {
 
-        const ext = path.extname(filename).toLowerCase().slice(1)
+        console.log('ckokidar: add')
+
+        const ext = path.extname(filename).toLowerCase()
         const type = extensions[ext] || 'other'
         const file = new fileTypes[type](filename, this.sourceDir, this.targetDir)
 
@@ -49,26 +61,47 @@ module.exports = class Compiler {
         }
     }
 
+    /**
+     * Removes a file from the files array
+     * @constructor
+     * @param {string} filename - The name of the file
+     */
+
+    removeFile(filename) {
+
+        console.log('ckokidar: remove')
+
+        this.files = this.files.filter(file => {
+
+            const sourceFile = `${file.fileInfo.dir}/${file.fileInfo.base}`
+            return sourceFile != filename
+        })
+
+    }
+
+    /**
+     * Checks if the root directory still exists when folders are being removed
+     * @param {string} dirname - name of the directory
+     */
+
+    checkDir(dirname) {
+
+        if (this.project.path == dirname) {
+
+            console.log('ok unlinking dir')
+            // Send a message to the main process that a folder has been removed
+            ipcRenderer.send('unlink-project', this.project)
+        }
+    }
+
     change(filename) {
 
-        // Get the extension
-        const ext = path.extname(filename).toLowerCase().slice(1)
+        console.log('ckokidar: change', filename)
 
-        // Filter the files bases on their type
-        var filtered = this.files.filter(file => {
+        const filtered = this.files.filter(file => {
 
-            const info = file.fileInfo
-            // Render only the 'masters' for the javascript and stylesheet
-            if (extensions[ext] == 'javascript' ||
-                extensions[ext] == 'stylesheet') {
-
-                return file.type == extensions[ext]
-
-            } else {
-
-                return file.type == extensions[ext]
-                    && `${info.sourceDir}/${info.sourceFile}` == filename
-            }
+            const sourceFile = `${file.fileInfo.dir}/${file.fileInfo.base}`
+            return sourceFile == filename
         })
 
         this.render(filtered)
@@ -88,6 +121,12 @@ module.exports = class Compiler {
                 server: this.targetDir
             });
         }
+    }
+
+    destroy() {
+
+        this.watcher.close()
+        delete this
     }
 
     render(files) {

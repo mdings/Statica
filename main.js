@@ -1,4 +1,4 @@
-const {ipcMain,app, BrowserWindow} = require('electron')
+const {ipcMain, app, BrowserWindow} = require('electron')
 
 const path = require('path')
 const url = require('url')
@@ -52,7 +52,7 @@ function createWindow () {
     workerWindow = new BrowserWindow({
         width: 300,
         height: 300,
-        show: false
+        // show: false
     })
 
     workerWindow.loadURL(url.format({
@@ -69,10 +69,11 @@ function createWindow () {
     projectsWindow = new BrowserWindow({
         width: 800,
         height: 600,
-        titleBarStyle: 'hidden-inset',
+        frame: false,
+        // titleBarStyle: 'hidden-inset',
         webPreferences: {
 
-            scrollBounce: true
+            // scrollBounce: true
         }
     })
 
@@ -102,20 +103,22 @@ function createWindow () {
     // Wait for the contents to load, then load the projects
     projectsWindow.webContents.on('did-finish-load', () => {
 
-        store
-        .getAllProjects()
-        .then(projects => {
-
-            projectsWindow.webContents.send('projects-loaded', Array.from(projects))
+        store.getAllProjects().then(projects => {
 
             // Send the project to the compiler
             if (Object.prototype.toString.call(projects) === '[object Array]') {
 
                 projects.forEach(project => {
 
-                    workerWindow.webContents.send('create-project', project)
+                    // Don't create no compiler for projects flagged as unlinked
+                    if (!project.unlinked) {
+
+                        workerWindow.webContents.send('create-compiler', project)
+                    }
                 })
             }
+
+            projectsWindow.webContents.send('projects-loaded', Array.from(projects))
         })
     })
 
@@ -158,6 +161,27 @@ ipcMain.on('showExportersWindow', (e, project) => {
     exportersWindow.show()
 })
 
+ipcMain.on('create-compiler', (e, project) => {
+
+    workerWindow.webContents.send('create-compiler', project)
+})
+
+ipcMain.on('remove-compiler', (e, project) => {
+
+    workerWindow.webContents.send('remove-compiler', project.id)
+})
+
+ipcMain.on('unlink-project', (e, project) => {
+
+    project.unlinked = true
+    store.setProjectById(project).then(() => {
+
+        store.getAllProjects().then(projects => {
+
+            projectsWindow.webContents.send('reload-projects', projects)
+        })
+    })
+})
 
 ipcMain.on('startServer', (e, project) => {
 

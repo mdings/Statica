@@ -60,21 +60,22 @@ module.exports = class Page extends File {
     }
 
     get exportExtension() {
-        return 'html'
+
+        return '.html'
     }
 
     get isHTML() {
-        return this.fileInfo.extension == 'html'
-            || this.fileInfo.extension == 'htm'
+        return this.fileInfo.extension == '.html'
+            || this.fileInfo.extension == '.htm'
     }
 
     get isMarkDown() {
-        return this.fileInfo.extension == 'md'
-            || this.fileInfo.extension == 'markdown'
+        return this.fileInfo.extension == '.md'
+            || this.fileInfo.extension == '.markdown'
     }
 
     get isPug() {
-        return this.fileInfo.extension == 'pug'
-            || this.fileInfo.extension == 'jade'
+        return this.fileInfo.extension == '.pug'
+            || this.fileInfo.extension == '.jade'
     }
 }

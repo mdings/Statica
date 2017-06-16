@@ -18,6 +18,6 @@ module.exports = class Image extends File {
     get exportExtension() {
 
         // Keep the same extension
-        return this.fileInfo.extension
+        return this.fileInfo.ext
     }
 }
