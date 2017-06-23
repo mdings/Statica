@@ -24,12 +24,17 @@ module.exports = {
         options: {
           // vue-loader options go here
         }
-      },
-      {
+      }, {
         test: /\.js$/,
         loader: 'babel-loader',
         exclude: /node_modules/
-      }
+      }, {
+			    test: /\.svg/,
+			    use: {
+			        loader: 'svg-url-loader',
+			        options: {}
+			    }
+			}
     ]
   },
   resolve: {

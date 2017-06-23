@@ -6,38 +6,32 @@ const ignored = require('./ignored')
 const {app} = require('electron').remote
 const {ipcRenderer} = require('electron')
 
-function hasUnderscore(filename) {
+const hasUnderscore = (filename) => {
 
-    const parts = path.normalize(filename).split('/')
-    const scores = parts.filter(part => {
-
-        return part.charAt(0) == '_'
-    })
-
-    return scores.length > 0 ? true : false
+    return path.parse(filename).base.charAt(0) == '_'
 }
+
 
 module.exports = class Compiler {
 
     constructor(project) {
 
-        // Set project properties
-        this.files = []
         this.project = project
-        this.browsersync = require('browser-sync').create(project.id);
-        this.sourceDir = project.path
-        // this.targetDir = `${app.getPath('userData')}/temp/${project.id}`
-        this.targetDir = `${this.sourceDir}/build`
+        this.files = []
 
-        this.watcher = chokidar.watch(this.sourceDir, {ignored: ignored(this.sourceDir, this.targetDir)})
-            .on('add', filename => this.createFile(path.normalize(filename)))
-            .on('unlink', filename => this.removeFile(path.normalize(filename)))
-            .on('unlinkDir', dirname => this.checkDir(path.normalize(dirname)))
+        this.watcher = chokidar.watch(project.path, {
+
+            ignored: ignored(`${project.path}/build`)
+        })
+
+        this.watcher
+            .on('add', filename => this.add(path.normalize(filename)))
+            .on('unlink', filename => this.unlink(path.normalize(filename)))
+            .on('unlinkDir', dirname => this.unlinkDir(path.normalize(dirname)))
             .on('change', filename => this.change(filename))
             .on('ready', () => {
 
-                console.log(this.watcher.getWatched())
-                // console.log(this.files)
+                console.log('project ready')
             })
     }
 
@@ -47,17 +41,48 @@ module.exports = class Compiler {
      * @param {string} filename - The name of the file
      */
 
-    createFile(filename) {
-
-        console.log('ckokidar: add')
+    add(filename) {
 
         const ext = path.extname(filename).toLowerCase()
         const type = extensions[ext] || 'other'
-        const file = new fileTypes[type](filename, this.sourceDir, this.targetDir)
+        const file = new fileTypes[type](filename, this.project)
 
         if(!hasUnderscore(filename)) {
 
+            const project = this.project
+
             this.files.push(file)
+
+            // Consolidate file errors to be able to pass them to the application
+            file.on('error', (message, filename) => {
+
+                // Notify the UI of a status update
+                ipcRenderer.send('status-update', {
+
+                    status: 'error',
+                    project
+                })
+
+                ipcRenderer.send('project-error', {
+
+                    project,
+                    message,
+                    filename
+                })
+            })
+
+            file.on('success', e => {
+
+                // Notify the UI of a status update
+                setTimeout(() => {
+
+                    ipcRenderer.send('status-update', {
+
+                        status: 'success',
+                        project
+                    })
+                }, 500)
+            })
         }
     }
 
@@ -67,14 +92,13 @@ module.exports = class Compiler {
      * @param {string} filename - The name of the file
      */
 
-    removeFile(filename) {
+    unlink(filename) {
 
         console.log('ckokidar: remove')
 
         this.files = this.files.filter(file => {
 
-            const sourceFile = `${file.fileInfo.dir}/${file.fileInfo.base}`
-            return sourceFile != filename
+            return file.filename != filename
         })
 
     }
@@ -84,11 +108,10 @@ module.exports = class Compiler {
      * @param {string} dirname - name of the directory
      */
 
-    checkDir(dirname) {
+    unlinkDir(dirname) {
 
         if (this.project.path == dirname) {
 
-            console.log('ok unlinking dir')
             // Send a message to the main process that a folder has been removed
             ipcRenderer.send('unlink-project', this.project)
         }
@@ -96,58 +119,42 @@ module.exports = class Compiler {
 
     change(filename) {
 
-        console.log('ckokidar: change', filename)
+        const file = this.files.find(file => {
 
-        const filtered = this.files.filter(file => {
-
-            const sourceFile = `${file.fileInfo.dir}/${file.fileInfo.base}`
-            return sourceFile == filename
+            return file.filename == filename
         })
 
-        this.render(filtered)
-    }
+        if (file) {
 
-    launch() {
+            // Notify the UI of a project being processed
+            ipcRenderer.send('status-update', {
 
-        this.render(this.files)
-
-        if (!this.browsersync.active) {
-
-            // const targetDir = `${app.getPath('userData')}/temp/${this.project.id}`
-
-            this.browsersync.init({
-                ui: false,
-                notify: false,
-                server: this.targetDir
-            });
+                status: 'processing',
+                project: this.project
+            })
+            file.render()
         }
     }
+
+    // launch() {
+
+    //     this.render(this.files)
+
+    //     if (!this.browsersync.active) {
+
+    //         // const targetDir = `${app.getPath('userData')}/temp/${this.project.id}`
+
+    //         this.browsersync.init({
+    //             ui: false,
+    //             notify: false,
+    //             server: this.targetDir
+    //         });
+    //     }
+    // }
 
     destroy() {
 
         this.watcher.close()
         delete this
-    }
-
-    render(files) {
-
-        // Create a batch to process
-        let batch = []
-
-        // Push the files to the batch
-        files.forEach(file => {
-
-            batch.push(file.promise())
-        })
-
-        // Render the batch
-        Promise.all(batch).then(() => {
-
-            console.log('all done for: ' + this.project.id)
-
-        }).catch(error => {
-
-            console.log(error)
-        })
     }
 }

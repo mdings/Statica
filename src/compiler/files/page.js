@@ -9,8 +9,9 @@ const File = require('../file')
 
 module.exports = class Page extends File {
 
-    constructor(filepath, sourceDir, targetDir) {
-        super(filepath, sourceDir, targetDir)
+    constructor(filename, project) {
+
+        super(filename, project)
     }
 
     //@TODO: Look into node streams (.pipe())

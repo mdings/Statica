@@ -8,13 +8,19 @@
         @click="sendClickEvent"
         hint="Drop folders here">
         <Titlebar></Titlebar>
-        <Projects></Projects>
+        <Panels></Panels>
+        <section id="outlet">
+            <Projects v-show="active == 'projects'"></Projects>
+            <Logs v-show="active == 'logs'"></Logs>
+        </section>
     </main>
 </template>
 
 <script>
 
     import Titlebar from './Titlebar.vue'
+    import Panels from './Panels.vue'
+    import Logs from './Logs.vue'
     import Projects from './Projects.vue'
 
     const {ipcRenderer} = require('electron')
@@ -25,8 +31,18 @@
 
         components: {
 
+            Titlebar,
+            Panels,
             Projects,
-            Titlebar
+            Logs
+        },
+
+        data() {
+
+            return {
+
+                active: 'projects'
+            }
         },
 
         created() {
@@ -37,6 +53,17 @@
 
                     body: message
                 })
+            })
+
+            window.addEventListener('mousewheel', (e) => {
+
+                this.$el.classList.toggle('is-scrolling-down',
+                    e.deltaY > 0 && e.srcElement.scrollHeight > e.srcElement.parentNode.clientHeight)
+            }, false)
+
+            this.$root.$on('setActive', panel => {
+
+                this.active = panel
             })
         },
 
@@ -106,6 +133,24 @@
                 color: darkgray;
                 font-size: 21px;
             }
+        }
+    }
+
+    #outlet {
+
+        position: relative;
+        overflow: hidden;
+        flex-grow: 1;
+
+        & > * {
+
+            left: 0;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            position: absolute;
+            height: 100%;
+            overflow: scroll;
         }
     }
 

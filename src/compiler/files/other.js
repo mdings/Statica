@@ -1,12 +1,13 @@
 'use strict'
 
 const File = require('../file')
+const path = require('upath')
 
 module.exports = class Other extends File {
 
-    constructor(filepath, sourceDir, targetDir) {
+    constructor(filename, project) {
 
-        super(filepath, sourceDir, targetDir)
+        super(filename, project)
     }
 
     render() {
@@ -18,6 +19,6 @@ module.exports = class Other extends File {
     get exportExtension() {
 
         // Keep the same extension
-        return this.fileInfo.ext
+        return path.parse(this.filename).ext
     }
 }

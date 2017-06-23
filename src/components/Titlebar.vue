@@ -39,6 +39,9 @@
 
         height: 45px;
         flex: 0 0 45px;
+        position: relative;
+        z-index: 99;
+        background-color: #fff;
     }
 
     button {

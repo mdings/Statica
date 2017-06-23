@@ -171,8 +171,31 @@ ipcMain.on('remove-compiler', (e, project) => {
     workerWindow.webContents.send('remove-compiler', project.id)
 })
 
+ipcMain.on('project-error', (e, data) => {
+
+    /*
+    data {
+        project,
+        mesage
+    }
+    */
+    projectsWindow.webContents.send('project-error', data)
+})
+
+ipcMain.on('status-update', (e, data) => {
+
+    /*
+    data {
+        status,
+        project
+    }
+    */
+    projectsWindow.webContents.send('status-update', data)
+})
+
 ipcMain.on('unlink-project', (e, project) => {
 
+    console.log('inlinking project')
     project.unlinked = true
     store.setProjectById(project).then(() => {
 

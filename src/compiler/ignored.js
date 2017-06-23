@@ -1,10 +1,10 @@
 const path = require('upath')
 const fs = require('fs')
 
-module.exports = function (sourceDir, targetDir){
-    
+module.exports = function (targetDir){
+
     const ignores = [
-        targetDir,
+
         path.join(targetDir, '/**'),
         /\/\./, // hidden files
         /package\.json/,

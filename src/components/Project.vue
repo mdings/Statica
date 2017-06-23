@@ -1,8 +1,5 @@
 <template>
-    <div class="project" v-bind:class="{unlinked: project.unlinked}">
-        <div class="project__icon">
-            <svg height="32" viewBox="0 0 32 32" width="32" xmlns="http://www.w3.org/2000/svg"><title/><path d="M17 9l-2-4H4.003C2.897 5 2 5.89 2 6.99v18.02c0 1.1.9 1.99 1.993 1.99h25.014c1.1 0 1.993-.893 1.993-1.995v-14.01C31 9.893 30.103 9 28.994 9H17zm-.64 1L14.4 6H3.992C3.444 6 3 6.455 3 6.992v18.016c0 .548.446.992.993.992h25.014c.548 0 .993-.445.993-1V11c0-.552-.454-1-1.003-1H16.36z" fill-rule="evenodd"/></svg>
-        </div>
+    <div class="project" v-bind:class="[status, {unlinked: project.unlinked}]">
         <div class="project__info">
             <div class="project__name"
                 @dblclick="renameProject"
@@ -28,6 +25,8 @@
         props: ['project'],
 
         created() {
+
+            ipcRenderer.on('status-update', this.updateStatus)
 
             const vm = this
 
@@ -83,6 +82,7 @@
             return {
 
                 placeholder: '',
+                status: 'success',
                 isEditable: false,
                 menu: null
             }
@@ -144,7 +144,15 @@
             openOptions() {
 
                 this.menu.popup(require('electron').remote.getCurrentWindow())
-            }
+            },
+
+            updateStatus(e, data) {
+
+                if (data.project.id == this.project.id) {
+
+                    this.status = data.status
+                }
+            },
         }
     }
 
@@ -152,9 +160,23 @@
 
 <style lang="sass">
 
+    @keyframes load8 {
+
+        0% {
+
+            transform: rotate(0deg);
+        }
+
+        100% {
+
+            transform: rotate(360deg);
+        }
+
+    }
+
     .project {
 
-        padding: 15px 10px 15px 25px;
+        padding: 15px 10px 15px 12px;
         border-bottom: 1px solid #f1f1f1;
         font-size: 13px;
         display: flex;
@@ -164,23 +186,54 @@
 
             background-color: red
         }
-    }
 
-    .project__icon {
+        &:before {
 
-        display: none;
-        width: 25px;
-        align-self: center;
-        flex-shrink: 0;
+            flex: 0 0 10px;
+            height: 10px;
+            align-self: center;
+            display: block;
+            content: '';
+            border-radius: 50%;
+            border: 2px solid #ccc;
+            margin-right: 10px;
+            background-repeat: no-repeat;
+            background-position: center;
+            transition: all 250ms linear;
+            animation: load8 500ms infinite linear;
+        }
 
-        svg {
+        &.success {
 
-            fill: #157EFB
+            &:before {
+
+                border-color: #32E875;
+            }
+        }
+
+        &.processing {
+
+            &:before {
+
+                border-width: 5px;
+                border-top-color: #333;
+                border-right-color: #333;
+                transform: translateZ(0);
+            }
+        }
+
+        &.error {
+
+            &:before {
+
+                border-color: #D63230;
+            }
         }
     }
 
     .project__info {
 
+        flex-grow: 1;
         max-width: 100%;
         overflow: hidden;
     }
@@ -215,7 +268,7 @@
         overflow: hidden;
         white-space: nowrap;
         text-overflow: ellipsis;
-        font-size: 12px;
+        font-size: 11px;
         color: #666;
         width: 100%;
         -webkit-user-select: none;

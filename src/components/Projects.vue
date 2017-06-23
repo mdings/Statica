@@ -39,12 +39,6 @@
             ipcRenderer.on('projects-loaded', this.loadProjects)
             ipcRenderer.on('reload-projects', this.reloadProjects)
 
-            this.$watch('projects', (newVal, oldVal) => {
-
-                // note: newVal == oldVal when mutating array!
-                console.log('projects changes')
-
-            })
         },
 
         components: {
@@ -146,43 +140,43 @@
 
 <style lang="sass">
 
-    #projects {
+    // #projects {
 
-        -webkit-app-region: no-drag;
-        height: calc(100vh - 38px);
-        overflow: scroll;
+    //     -webkit-app-region: no-drag;
+    //     height: calc(100vh - 38px);
+    //     overflow: scroll;
 
-        .has-drop-area & {
+    //     .has-drop-area & {
 
-            overflow: hidden;
+    //         overflow: hidden;
 
-            &:before {
+    //         &:before {
 
-                display: block;
-                content: '';
-                position: absolute;
-                top: 38px;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                z-index: 2;
-                background-color: rgba(#fff, .92);
-            }
+    //             display: block;
+    //             content: '';
+    //             position: absolute;
+    //             top: 38px;
+    //             left: 0;
+    //             right: 0;
+    //             bottom: 0;
+    //             z-index: 2;
+    //             background-color: rgba(#fff, .92);
+    //         }
 
-            &:after {
+    //         &:after {
 
-                display: block;
-                content: '';
-                position: absolute;
-                top: 38px;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                margin: 12px;
-                border: 3px dashed darkgray;
-                border-radius: 2px;
-                z-index: 3;
-            }
-        }
-    }
-</style>
+    //             display: block;
+    //             content: '';
+    //             position: absolute;
+    //             top: 38px;
+    //             left: 0;
+    //             right: 0;
+    //             bottom: 0;
+    //             margin: 12px;
+    //             border: 3px dashed darkgray;
+    //             border-radius: 2px;
+    //             z-index: 3;
+    //         }
+    //     }
+    // }
+</template>
