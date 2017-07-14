@@ -8,19 +8,14 @@
         @click="sendClickEvent"
         hint="Drop folders here">
         <Titlebar></Titlebar>
-        <Panels></Panels>
-        <section id="outlet">
-            <Projects v-show="active == 'projects'"></Projects>
-            <Logs v-show="active == 'logs'"></Logs>
-        </section>
+        <Projects v-show="active == 'projects'"></Projects>
     </main>
 </template>
 
 <script>
 
+    import '../sass/main.scss'
     import Titlebar from './Titlebar.vue'
-    import Panels from './Panels.vue'
-    import Logs from './Logs.vue'
     import Projects from './Projects.vue'
 
     const {ipcRenderer} = require('electron')
@@ -32,9 +27,7 @@
         components: {
 
             Titlebar,
-            Panels,
             Projects,
-            Logs
         },
 
         data() {
@@ -107,51 +100,3 @@
     }
 
 </script>
-
-<style lang="sass">
-
-    @import "src/mixins/reset";
-
-    main {
-
-        height: 100vh;
-        display: flex;
-        flex-direction: column;
-        -webkit-app-region: drag;
-
-        &.has-drop-area {
-
-            &:after {
-
-                display: block;
-                content: attr(hint);
-                position: absolute;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-                z-index: 5;
-                color: darkgray;
-                font-size: 21px;
-            }
-        }
-    }
-
-    #outlet {
-
-        position: relative;
-        overflow: hidden;
-        flex-grow: 1;
-
-        & > * {
-
-            left: 0;
-            right: 0;
-            top: 0;
-            bottom: 0;
-            position: absolute;
-            height: 100%;
-            overflow: scroll;
-        }
-    }
-
-</style>

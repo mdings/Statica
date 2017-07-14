@@ -32,8 +32,9 @@ module.exports = class Stylesheet extends File {
 
                 if (err) {
 
-                    const message = `Error at line ${err.line}: ${err.message}`
-                    this.emit('error', message, path.parse(this.filename).base)
+                    const message = `<strong>${err.message}</strong><br>
+                    <span class="line">Error at line ${err.line}</span>`
+                    this.emit('error', message, path.parse(this.filename), err.line)
 
                 } else {
 

@@ -5,9 +5,10 @@ module.exports = {
   entry: {
     projects: './src/projects.js',
     services: './src/services.js',
+    logs: './src/logs.js',
   },
   output: {
-    path: path.resolve(__dirname, './dist'),
+    path: path.resolve(__dirname, './dist/'),
     publicPath: '/dist/',
     filename: '[name].build.js'
   },
@@ -34,7 +35,8 @@ module.exports = {
 			        loader: 'svg-url-loader',
 			        options: {}
 			    }
-			}
+			},{ test: /\.scss$/, loader: 'style-loader!css-loader!sass-loader' }
+
     ]
   },
   resolve: {

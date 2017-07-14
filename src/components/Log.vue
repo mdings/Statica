@@ -1,7 +1,15 @@
 <template>
     <div class="log">
-        <div class="file">Failed to compile {{log.filename}} in {{log.project.name}}</div>
-        <div class="message">{{log.message}}</div>
+        <div class="message" v-html="log.message"></div>
+        <div class="lines">
+            <pre v-for="line in log.lines">
+                {{line.line.replace(/\s+/, '')}}
+            </pre>
+        </div>
+        <div class="file">
+            Failed to compile
+            <span class="filename">{{log.filename.base}}</span> in {{log.project.name}}
+        </div>
     </div>
 </template>
 
@@ -12,26 +20,40 @@
     }
 </script>
 
-<style lang="sass">
+<style lang="sass" scoped>
+
+    .message {
+
+        word-break: break-word;
+    }
+
     .log {
 
-        font-size: 13px;
+        flex-basis: 100%;
+        font-size: 12px;
+        padding: 10px;
+        border-bottom: 1px solid #f1f1f1;
+    }
 
-        .file {
+    .lines {
 
-            font-weight: bold;
-        }
+        word-break: break-word;
+        margin-top: 10px;
+        border-left: 3px solid #D63230;
+        padding: 7px;
+        background-color: lemonchiffon;
+        font-family: monospace;
 
-        .message {
+        pre {
 
-            font-family: Monospace;
-            margin-top: 3px;
-        }
-
-        & + & {
-
-            margin-top: 10px;
+            white-space: normal;
         }
     }
+
+    .file {
+
+        margin-top: 10px;
+    }
 </style>
+
 

@@ -29,39 +29,3 @@
         }
     }
 </script>
-
-<style lang="sass" scoped>
-
-    @import "src/mixins/header";
-    @import "src/mixins/inputs";
-
-    header {
-
-        height: 45px;
-        flex: 0 0 45px;
-        position: relative;
-        z-index: 99;
-        background-color: #fff;
-    }
-
-    button {
-
-        width: 30px;
-        position: relative;
-        margin: 0 10px 0 auto;
-        -webkit-app-region: no-drag;
-
-        svg {
-
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 23px;
-            height: auto;
-            fill: #222;
-            transform: translate(-50%, -50%);
-        }
-    }
-
-
-</style>

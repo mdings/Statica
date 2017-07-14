@@ -1,8 +1,8 @@
 <template>
-    <div @click="setActiveService(service)" class="service">
-        <span>{{service.title}}</span>
-        <span class="service-type">{{service.type}}</span>
-    </div>
+    <tr @click="setActiveService(service)" class="service">
+        <td class="service-tyle">{{service.title}}</td>
+        <td class="service-type">{{service.type}}</td>
+    </tr>
 </template>
 
 <script>
@@ -12,6 +12,7 @@
 
         created() {
 
+            console.log(this.service)
         },
 
         methods: {
@@ -24,18 +25,13 @@
     }
 </script>
 
-<style type="sass" scoped>
+<style lang="sass" scoped>
 
     .service {
 
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
+        &.active {
 
-    .service-type {
-
-        font-size: 12px;
-        font-weight: bold;
+            background-color: #E9F3FE;
+        }
     }
 </style>

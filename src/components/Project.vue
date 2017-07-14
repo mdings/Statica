@@ -1,5 +1,10 @@
 <template>
-    <div class="project" v-bind:class="[status, {unlinked: project.unlinked}]">
+    <div class="project" v-bind:class="[status, {unlinked: project.unlinked, favourite: project.favourite}]">
+        <svg class="project__fav" @click="toggleFav" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <g fill="none" fill-rule="evenodd">
+                <path d="M11.985 18.136L5.187 23l2.35-8.012L1 9.562l7.95-.07L11.985 1l2.95 8.562H23l-6.567 5.478 2.35 7.96-6.798-4.864z"/>
+            </g>
+        </svg>
         <div class="project__info">
             <div class="project__name"
                 @dblclick="renameProject"
@@ -8,10 +13,12 @@
                 placeholder="Untitled project"
                 :contenteditable="this.isEditable == true">{{project.name}}</div>
             <div class="project__path">{{project.path}}</div>
+            <div class="project__unlinked" v-show="project.unlinked">
+                Folder not found!
+                You can either <a href="javascript:void(0)">relink location</a> or <a href="javascript:void(0)" @click="removeProject">remove project</a>
+            </div>
         </div>
-        <div class="project__actions">
-            <svg @click="openOptions" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg"><path d="M0 0h48v48H0z" fill="none"/><path d="M24 16c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 4c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm0 12c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4z"/></svg>
-        </div>
+        <svg @click="openOptions" class="project__actions" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg"><path d="M0 0h48v48H0z" fill="none"/><path d="M24 16c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 4c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm0 12c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4z"/></svg>
     </div>
 </template>
 
@@ -99,6 +106,12 @@
                 ipcRenderer.send('startServer', this.project.id)
             },
 
+            toggleFav() {
+
+                this.$set(this.project, 'favourite', !this.project.favourite)
+                this.$root.$emit('update-project', this.project)
+            },
+
             updateProjectName() {
 
                 this.project.name = this.placeholder
@@ -158,76 +171,54 @@
 
 </script>
 
-<style lang="sass">
+<style lang="sass" scoped>
 
-    @keyframes load8 {
-
-        0% {
-
-            transform: rotate(0deg);
-        }
-
-        100% {
-
-            transform: rotate(360deg);
-        }
-
-    }
+    @import "../sass/settings";
 
     .project {
 
-        padding: 15px 10px 15px 12px;
+        padding: 13px 13px 13px 15px;
         border-bottom: 1px solid #f1f1f1;
         font-size: 13px;
+        position: relative;
         display: flex;
         justify-content: space-between;
+        flex-shrink: 0;
+        width: 100%;
+
+        &.favourite {
+
+            .project__fav {
+
+                path {
+
+                    fill: #FEC601;
+                }
+            }
+        }
 
         &.unlinked {
 
-            background-color: red
-        }
+            .project__actions {
 
-        &:before {
-
-            flex: 0 0 10px;
-            height: 10px;
-            align-self: center;
-            display: block;
-            content: '';
-            border-radius: 50%;
-            border: 2px solid #ccc;
-            margin-right: 10px;
-            background-repeat: no-repeat;
-            background-position: center;
-            transition: all 250ms linear;
-            animation: load8 500ms infinite linear;
-        }
-
-        &.success {
-
-            &:before {
-
-                border-color: #32E875;
+                fill: #ccc;
+                pointer-events: none;
             }
         }
+    }
 
-        &.processing {
+    .project__fav {
 
-            &:before {
+        height: 20px;
+        width: auto;
+        align-self: center;
+        margin-right: 15px;
+        transition: transform 100ms ease-out;
+        flex-shrink: 0;
 
-                border-width: 5px;
-                border-top-color: #333;
-                border-right-color: #333;
-                transform: translateZ(0);
-            }
-        }
+        path {
 
-        &.error {
-
-            &:before {
-
-                border-color: #D63230;
-            }
+            fill: #ccc;
         }
     }
 
@@ -246,7 +237,7 @@
         overflow: hidden;
         position: relative;
         text-overflow: ellipsis;
-        font-size: 18px;
+        font-size: 15px;
         color: #333;
         width: 100%;
 
@@ -274,16 +265,30 @@
         -webkit-user-select: none;
     }
 
+    .project__unlinked {
+
+        font-size: 11px;
+        border-radius: 5px;
+        margin-top: 10px;
+        color: #941C2F;
+
+        a {
+
+            color: $color-blue;
+        }
+    }
+
     .project__actions {
 
         flex-shrink: 0;
         align-self: center;
         margin-left: 15px;
+        fill: $color-blue;
+        width: 24px;
 
-        svg {
+        &:hover {
 
-            fill: #157EFB;
-            width: 24px;
+            fill: mix(#000, $color-blue, 20%);
         }
     }
 </style>

@@ -1,7 +1,13 @@
 <template>
-    <div id="projects">
-        <Project v-for="project in projects" :project="project"></Project>
-    </div>
+    <section id="projects" v-bind:class="{ empty: !projects.length }">
+        <div class="projects__divider" v-show="favProjects.length">Favourite projects</div>
+        <Project v-for="project in favProjects" :key="project.id" :project="project"></Project>
+        <div class="projects__divider" v-show="otherProjects.length && favProjects.length">Other projects</div>
+        <Project v-for="project in otherProjects" :key="project.id" :project="project"></Project>
+        <div v-show="!projects.length" class="emptystate">
+            There a no projects yet. Click the '+' to add a new folder or drag and drop one in the projects area.
+        </div>
+    </section>
 </template>
 
 <script>
@@ -44,6 +50,25 @@
         components: {
 
             Project
+        },
+
+        computed: {
+
+            favProjects() {
+
+                return this.projects.filter(project => {
+
+                    return project.favourite
+                })
+            },
+
+            otherProjects() {
+
+                return this.projects.filter(project => {
+
+                    return !project.favourite
+                })
+            }
         },
 
         data() {
@@ -137,46 +162,3 @@
         }
     }
 </script>
-
-<style lang="sass">
-
-    // #projects {
-
-    //     -webkit-app-region: no-drag;
-    //     height: calc(100vh - 38px);
-    //     overflow: scroll;
-
-    //     .has-drop-area & {
-
-    //         overflow: hidden;
-
-    //         &:before {
-
-    //             display: block;
-    //             content: '';
-    //             position: absolute;
-    //             top: 38px;
-    //             left: 0;
-    //             right: 0;
-    //             bottom: 0;
-    //             z-index: 2;
-    //             background-color: rgba(#fff, .92);
-    //         }
-
-    //         &:after {
-
-    //             display: block;
-    //             content: '';
-    //             position: absolute;
-    //             top: 38px;
-    //             left: 0;
-    //             right: 0;
-    //             bottom: 0;
-    //             margin: 12px;
-    //             border: 3px dashed darkgray;
-    //             border-radius: 2px;
-    //             z-index: 3;
-    //         }
-    //     }
-    // }
-</template>

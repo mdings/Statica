@@ -6,7 +6,18 @@
         </header>
         <div class="body">
             <div class="exporters">
-                <Service v-for="service in services" :service="service" :class="{'active': service == activeService}"></Service>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Provider</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <Service v-for="service in services" v-bind:key="service.id" :service="service" :class="{'active': service == activeService}"></Service>
+                    </tbody>
+                </table>
+
             </div>
             <div class="form" :class="{'visible': isAdding}">
                 <Inputs :project="activeProject"></Inputs>
@@ -30,6 +41,7 @@
     const {BrowserWindow} = require('electron').remote
     let win
 
+    import '../sass/main.scss'
     import TrafficLights from './TrafficLights.vue'
     import Titlebar from './Titlebar.vue'
     import Service from './Service.vue'
@@ -88,7 +100,7 @@
                 // This is when we get the signal back from the main project with the password/
                 // So we can go ahead and use the service to deploy against
                 const type = this.activeService.type
-                exporters[type](this.activeProject, this.activeService)
+                exporters[type](this.activeProject, this.activeService, pass)
             })
 
             ipcRenderer.on('reloadActiveProject', e => {
@@ -139,6 +151,7 @@
 
             useExporter() {
 
+                console.log('using exporter')
                 console.log(this.activeService)
                 // Send a signal to the main process to safely retrieve the password from Keytar
                 ipcRenderer.send('retrievePassword', {
@@ -154,110 +167,3 @@
         }
     }
 </script>
-
-<style lang="sass">
-
-    @import "src/mixins/header";
-    @import "src/mixins/reset";
-
-    header {
-
-        height: 25px;
-        flex: 0 0 25px;
-
-        span {
-
-            position: absolute;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 13px;
-            color: #222;
-        }
-    }
-
-    #exporters {
-
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        height: 100vh;
-        overflow: hidden;
-    }
-
-    .body {
-
-        flex: 1;
-        position: relative;
-        overflow: hidden;
-    }
-
-    .exporters {
-
-        padding: 5px;
-        user-select: none;
-        cursor: default;
-        height: 100%;
-        overflow: scroll;
-
-        & > div {
-            font-size: 14px;
-            border-radius: 3px;
-            padding: 10px 20px;
-
-            &.active {
-
-                background-color: #BCDDF6;
-            }
-        }
-    }
-
-    .form {
-
-        padding: 5px;
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        overflow: auto;
-        transform: translateY(100%);
-        background-color: #f5f5f5;
-        transition: transform 100ms cubic-bezier(0.17, 0.67, .98, 1);
-
-        &.visible {
-
-            transform: translateY(0%);
-        }
-    }
-
-    .actions {
-
-        display: flex;
-        justify-content: space-between;
-        border-top: 1px solid #f1f1f1;
-        background-color: #fff;
-
-        & > * {
-
-            border: none;
-            background: transparent;
-            outline: none;
-            flex: 0 0 25%;
-            height: 30px;
-        }
-    }
-
-    .progress {
-
-        max-height: 0px;
-        height: 20px;
-        overflow: hidden;
-        background-color: #333;
-        transition: max-height 100ms cubic-bezier(0.455, 0.030, 0.515, 0.955);
-
-        &.is-active {
-
-            max-height: 20px;
-        }
-    }
-</style>

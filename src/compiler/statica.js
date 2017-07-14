@@ -16,12 +16,14 @@ module.exports = class Compiler {
 
     constructor(project) {
 
+        console.log('creating project')
+
         this.project = project
         this.files = []
 
         this.watcher = chokidar.watch(project.path, {
 
-            ignored: ignored(`${project.path}/build`)
+            ignored: ignored(`${project.path}/build/**/*`)
         })
 
         this.watcher
@@ -32,6 +34,7 @@ module.exports = class Compiler {
             .on('ready', () => {
 
                 console.log('project ready')
+                console.log(this.files)
             })
     }
 
@@ -54,20 +57,22 @@ module.exports = class Compiler {
             this.files.push(file)
 
             // Consolidate file errors to be able to pass them to the application
-            file.on('error', (message, filename) => {
+            file.on('error', (message, filename, line) => {
 
+                // @deprecate this
                 // Notify the UI of a status update
-                ipcRenderer.send('status-update', {
+                // ipcRenderer.send('status-update', {
 
-                    status: 'error',
-                    project
-                })
+                //     status: 'error',
+                //     project
+                // })
 
                 ipcRenderer.send('project-error', {
 
                     project,
                     message,
-                    filename
+                    filename,
+                    line
                 })
             })
 
@@ -94,7 +99,7 @@ module.exports = class Compiler {
 
     unlink(filename) {
 
-        console.log('ckokidar: remove')
+        // console.log('ckokidar: remove', filename)
 
         this.files = this.files.filter(file => {
 
@@ -110,6 +115,8 @@ module.exports = class Compiler {
 
     unlinkDir(dirname) {
 
+        console.log('unlinking Dir', this.project.path, dirname)
+
         if (this.project.path == dirname) {
 
             // Send a message to the main process that a folder has been removed
@@ -118,6 +125,8 @@ module.exports = class Compiler {
     }
 
     change(filename) {
+
+        console.log('trigger change')
 
         const file = this.files.find(file => {
 
@@ -132,6 +141,7 @@ module.exports = class Compiler {
                 status: 'processing',
                 project: this.project
             })
+
             file.render()
         }
     }

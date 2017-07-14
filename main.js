@@ -1,26 +1,46 @@
-const {ipcMain, app, BrowserWindow} = require('electron')
+const {ipcMain, app, BrowserWindow, Tray} = require('electron')
 
+const fs = require('fs')
 const path = require('path')
 const url = require('url')
 const store = require('./src/store')
 const keytar = require('keytar')
+
+const windows = require('./windows')
+
+let tray
+let logs
+let services
+let worker
+let projects
 
 if (process.env.NODE_ENV === 'development') {
 
     require('electron-reload')(__dirname)
 }
 
-// Keep a global reference of the window object, if you don't, the window will
-// be closed automatically when the JavaScript object is garbage collected.
-let projectsWindow
-let workerWindow
-let exportersWindow
+// Don't show the app in the doc, we have doc
+// app.dock.hide()
 
+const kickoff = () => {
 
-function createWindow () {
+    // Create the tray
+    tray = new Tray(path.join(__dirname, 'src/img/iconTemplate@2x.png'))
 
-    exportersWindow = new BrowserWindow({
+    // Create the four windows
+    logs = windows.create('logs', {
+        width: 250,
+        height: 155,
+        minHeight: 155,
+        show: false,
+        frame: false,
+        fullscreenable: false,
+        resizable: false,
+        transparent: true,
+        alwaysOnTop: true
+    })
 
+    services = windows.create('services', {
         width: 500,
         height: 500,
         minimizable: false,
@@ -30,185 +50,132 @@ function createWindow () {
         show: false
     })
 
-    if (process.env.NODE_ENV === 'development') {
-
-        exportersWindow.loadURL(`http://localhost:8080/services.html`)
-
-    } else {
-
-        exportersWindow.loadURL(`file://${__dirname}/services.html`)
-    }
-
-    exportersWindow.on('close', (e) => {
-
-        if (exportersWindow) {
-
-            exportersWindow.webContents.send('emptyServices')
-            exportersWindow.hide()
-            e.preventDefault()
-        }
-    })
-
-    workerWindow = new BrowserWindow({
+    worker = windows.create('worker', {
         width: 300,
         height: 300,
-        // show: false
+        show: true
     })
 
-    workerWindow.loadURL(url.format({
-
-    pathname: path.join(__dirname, 'worker.html'),
-
-        protocol: 'file:',
-        slashes: true,
-    }))
-
-    // workerWindow.webContents.openDevTools()
-
-    // Create the browser window.
-    projectsWindow = new BrowserWindow({
-        width: 800,
-        height: 600,
+    projects = windows.create('projects', {
+        width: 320,
+        height: 500,
         frame: false,
-        // titleBarStyle: 'hidden-inset',
-        webPreferences: {
+        show: true,
+    })
+}
 
-            // scrollBounce: true
-        }
+const listen = () => {
+
+    // Hide the window when it loses focus
+    logs.on('blur', e => {
+
+        logs.hide()
+        e.preventDefault()
     })
 
-    // and load the index.html of the app.
-    if (process.env.NODE_ENV === 'development') {
+    // Toggle the tray window on cick
+    tray.on('click', e => {
 
-        projectsWindow.loadURL(`http://localhost:8080/projects.html`)
+        const position = windows.getPosition(logs, tray)
+        logs.setPosition(position.x, position.y, false)
+        windows.toggle(logs)
+    })
 
-    } else {
+    services.on('close', e => {
 
-        projectsWindow.loadURL(`file://${__dirname}/projects.html`)
-    }
-
-    // Open the DevTools.
-    projectsWindow.webContents.openDevTools()
-
-    // Emitted when the window is closed.
-    projectsWindow.on('closed', function () {
-
-        // Dereference the window object, usually you would store windows
-        // in an array if your app supports multi windows, this is the time
-        // when you should delete the corresponding element.
-        projectsWindow = null
-        workerWindow = null
+        services.webContents.send('emptyServices')
+        services.hide()
+        e.preventDefault()
     })
 
     // Wait for the contents to load, then load the projects
-    projectsWindow.webContents.on('did-finish-load', () => {
+    projects.webContents.on('did-finish-load', () => {
 
-        store.getAllProjects().then(projects => {
+        store.getAllProjects().then(results => {
 
             // Send the project to the compiler
-            if (Object.prototype.toString.call(projects) === '[object Array]') {
+            if (Object.prototype.toString.call(results) === '[object Array]') {
 
-                projects.forEach(project => {
+                results.forEach(project => {
 
-                    // Don't create no compiler for projects flagged as unlinked
-                    if (!project.unlinked) {
+                    // Check if the project folder still existst when booting
+                    if (!fs.existsSync(project.path)) {
 
-                        workerWindow.webContents.send('create-compiler', project)
+                        project.unlinked = true
+
+                    } else {
+
+                        // Create a new project in the worker
+                        worker.webContents.send('create-compiler', project)
                     }
                 })
             }
 
-            projectsWindow.webContents.send('projects-loaded', Array.from(projects))
+            // Let the DOM know that we done loading
+            projects.webContents.send('projects-loaded', Array.from(results))
         })
     })
-
 }
 
-// This method will be called when Electron has finished
-// initialization and is ready to create browser windows.
-// Some APIs can only be used after this event occurs.
-app.on('ready', createWindow)
 
-// Quit when all windows are closed.
-app.on('window-all-closed', function () {
+app.on('ready', () => {
 
-    // On OS X it is common for applications and their menu bar
-    // to stay active until the user quits explicitly with Cmd + Q
-    if (process.platform !== 'darwin') {
-
-        app.quit()
-    }
+    kickoff()
+    listen()
 })
 
-app.on('activate', function () {
 
-    // On OS X it's common to re-create a window in the app when the
-    // dock icon is clicked and there are no other windows open.
-    if (projectsWindow === null) {
-        createWindow()
-    }
+// Communications!
+
+ipcMain.on('show-window', () => {
+
+  windows.show(logs, false)
 })
 
-app.on('before-quit', function() {
-
-    exportersWindow = null
-})
-
-// communications
 ipcMain.on('showExportersWindow', (e, project) => {
 
-    exportersWindow.webContents.send('setActiveProject', project)
-    exportersWindow.show()
+    services.webContents.send('setActiveProject', project)
+    services.show()
 })
 
 ipcMain.on('create-compiler', (e, project) => {
 
-    workerWindow.webContents.send('create-compiler', project)
+    worker.webContents.send('create-compiler', project)
 })
 
 ipcMain.on('remove-compiler', (e, project) => {
 
-    workerWindow.webContents.send('remove-compiler', project.id)
+    worker.webContents.send('remove-compiler', project.id)
 })
 
 ipcMain.on('project-error', (e, data) => {
 
-    /*
-    data {
-        project,
-        mesage
-    }
-    */
-    projectsWindow.webContents.send('project-error', data)
+    logs.webContents.send('project-error', data)
+    projects.webContents.send('project-error', data)
+    windows.show(logs, false)
 })
 
 ipcMain.on('status-update', (e, data) => {
 
-    /*
-    data {
-        status,
-        project
-    }
-    */
-    projectsWindow.webContents.send('status-update', data)
+    projects.webContents.send('status-update', data)
 })
 
 ipcMain.on('unlink-project', (e, project) => {
 
-    console.log('inlinking project')
     project.unlinked = true
+
     store.setProjectById(project).then(() => {
 
-        store.getAllProjects().then(projects => {
+        store.getAllProjects().then(results => {
 
-            projectsWindow.webContents.send('reload-projects', projects)
+            projects.webContents.send('reload-projects', results)
         })
     })
 })
 
 ipcMain.on('startServer', (e, project) => {
 
-    workerWindow.webContents.send('startServer', project)
+    worker.webContents.send('startServer', project)
 })
 
 ipcMain.on('storePassword', (e, details) => {
@@ -219,12 +186,12 @@ ipcMain.on('storePassword', (e, details) => {
 ipcMain.on('retrievePassword', (e, details) => {
 
     const password = keytar.getPassword(`statica`, details.serviceId)
-    exportersWindow.webContents.send('retrievePassword', password)
+    services.webContents.send('retrievePassword', password)
 })
 
 ipcMain.on('reloadActiveProject', e => {
 
-    exportersWindow.webContents.send('reloadActiveProject')
+    services.webContents.send('reloadActiveProject')
 })
 
 

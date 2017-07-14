@@ -16,10 +16,10 @@
         <!-- /FTP credentials -->
 
         <!-- Github pages -->
-        <div v-show="exporter == 'github'">
-            <input type="text" name="title" placeholder="title">
-            <input type="text" name="username" placeholder="username">
-            <input type="password" name="password">
+        <div v-show="exporter == 'github'" data-github>
+            <input type="text" name="title" placeholder="title" required>
+            <input type="text" name="username" placeholder="username" required>
+            <input type="password" name="password" required>
         </div>
         <!-- /Github pages -->
 
@@ -100,6 +100,8 @@
 
                 // Add the exporter to the retrieved project
                 this.project.services.push(exporter)
+
+                console.log(exporter)
                 store.setProjectById(this.project)
 
                 // Hide the window
@@ -122,52 +124,3 @@
         }
     }
 </script>
-
-<style lang="sass">
-
-    *,
-    *:before,
-    *:after {
-
-        margin: 0;
-        padding: 0;
-        outline: none;
-        box-sizing: border-box;
-    }
-
-    body {
-
-        font-family: system,-apple-system,".SFNSDisplay-Regular","Helvetica Neue",Helvetica,"Segoe UI",sans-serif;
-    }
-
-    #inputs {
-
-    }
-
-    input {
-
-        width: 100%;
-        display: block;
-        border: 1px solid #ddd;
-        height: 30px;
-        border-radius: 4px;
-        outline: 0;
-        padding: 5px 10px;
-
-        &:focus {
-
-            border-color: #6db3fd;
-            box-shadow: 3px 3px 0 #6db3fd, -3px -3px 0 #6db3fd, -3px 3px 0 #6db3fd, 3px -3px 0 #6db3fd;
-        }
-
-        & + * {
-
-            margin-top: 5px;
-        }
-    }
-
-    [required].is-invalid {
-
-        border-color: red;
-    }
-</style>
