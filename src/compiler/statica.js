@@ -185,7 +185,7 @@ module.exports = class Compiler {
 
     launch() {
 
-        browsersync.init({
+        browsersync.create().init({
             ui: false,
             notify: false,
             server: `${this.project.path}/build/`,
