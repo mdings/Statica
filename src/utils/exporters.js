@@ -2,15 +2,54 @@ const {ipcRenderer} = require('electron')
 const fs = require('fs')
 const dir = require('node-dir')
 const path = require('path')
+const ghpages = require('gh-pages')
+const rmrf = require('rimraf')
+
+// exporters should optimize files first before deploying
 
 module.exports = {
+
+    github(project, service, pass) {
+
+        ipcRenderer.send('set-service-status', 'busy', service)
+
+        if (project.repo) {
+
+            // Rewrite the repo url so it uses username and password, like: https://user:pass@github.com/etc.
+            const repo = project.repo.replace(/github\.com/i, `${service.username}:${pass}@github.com`)
+
+            ghpages.publish(`${project.path}/build`, {
+
+                clone: `${project.path}/.clone`,
+                repo: repo
+
+            }, (err) => {
+
+                if (err) {
+
+                    console.log(err)
+                    ipcRenderer.send('set-service-status', 'error', service, /*err.message*/'Authorization failed')
+
+                } else {
+
+                    ipcRenderer.send('set-service-status', 'done', service)
+                }
+
+                // Remove the temp folder when done
+                rmrf(`${project.path}/.clone`, () => {})
+            })
+        }
+    },
+
 
     ftp(project, service, pass) {
 
         const Client = require('ftp')
         const c = new Client()
 
-        c.on('ready', e => {
+        c.on('ready', err => {
+
+            if (err) throw err
 
             c.cwd('/www', err => {
 
@@ -39,6 +78,7 @@ module.exports = {
                         })
                     })
 
+
                     c.end()
                 });
             })
@@ -46,27 +86,18 @@ module.exports = {
 
         c.on('error', e => {
 
-            ipcRenderer.send('project-error', {
-
-                project,
-                message: e,
-                filename: 'no filename',
-                line: 'no line'
-            })
+            ipcRenderer.send('set-service-status', 'error', service)
         })
 
-        c.on('end', e => {
+        c.on('close', err => {
 
-            ipcRenderer.send('project-error', {
+            if (!err) {
 
-                project,
-                message: 'done uploading',
-                filename: 'no filename',
-                line: 'no line'
-            })
+                ipcRenderer.send('set-service-status', 'done', service)
+            }
         })
 
-        console.log(service, pass)
+        ipcRenderer.send('set-service-status', 'busy', service)
 
         c.connect({
             host: service.host,
@@ -74,38 +105,5 @@ module.exports = {
             user: service.username,
             password: pass
         })
-
-        // Send the status of the connection to the tray
-        ipcRenderer.send('project-error', {
-
-            project,
-            message: 'connection to ftp...',
-            filename: 'no filename',
-            line: 'no line'
-        })
-
-
-    //     const deployer = new ftp()
-
-    //     deployer.connect({
-
-    //         username: service.username,
-    //         password: 'kxdfkJmH29',
-    //         host: service.host,
-    //         port: service.port,
-    //     })
-
-
-    //     deployer.upload(project.path + '/build/**/*', '/www/statica/', e => {
-
-    //         if (e) {
-
-    //             console.log(e)
-    //         }
-
-    //         deployer.close()
-    //     })
-    //     //@TODO: check for the localroot to exist
-    // }
     }
 }

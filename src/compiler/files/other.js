@@ -12,7 +12,6 @@ module.exports = class Other extends File {
 
     render() {
 
-        console.log(`copying other: ${this.fileInfo.sourceFile}`)
         this.copy()
     }
 

@@ -32,6 +32,12 @@ module.exports = class Stylesheet extends File {
 
                 if (err) {
 
+                    /* error object
+                    {
+                        message: "<info about the error>",
+                        line: <line of the error>
+                    }
+                    */
                     const message = `<strong>${err.message}</strong><br>
                     <span class="line">Error at line ${err.line}</span>`
                     this.emit('error', message, path.parse(this.filename), err.line)
@@ -46,10 +52,17 @@ module.exports = class Stylesheet extends File {
         // If the file is Stylus
         if (this.isStylus) {
 
+            console.log('rendering stylus')
             stylus.render(stream, (err, output) => {
 
                 if (err) {
 
+                    /* error object
+                    {
+                        name: "parseError",
+                        message: <code and info about the error >
+                    }
+                    */
                     this.emit('error', err.message)
 
                 } else {
@@ -68,10 +81,10 @@ module.exports = class Stylesheet extends File {
 
     process(css) {
 
-        // Run postCSS
+        // Run postCSS, which does automatic prefixing
         postcss([
 
-            // require('postcss-cssnext')
+            require('postcss-cssnext')
         ])
         .process(css)
         .then(result => {

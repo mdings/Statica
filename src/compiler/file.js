@@ -25,6 +25,22 @@ class File {
         return fs.readFileSync(this.filename, 'utf8')
     }
 
+    copy() {
+
+        const file = this.filename.replace(this.project, 'build')
+        const paths = path.parse(file)
+        const target = `${paths.dir}/${paths.name}${this.exportExtension}`
+        const destination = `${this.project}/${target}`
+
+        // Create the dir if it does not exist yet
+        mkdirp.sync(path.dirname(destination))
+        const inFile = fs.createReadStream(this.filename)
+        const outFile = fs.createWriteStream(destination);
+
+        // // Do the actual copying
+        inFile.pipe(outFile);
+    }
+
     write(result) {
 
         // Ouput all the files to the 'build' folder

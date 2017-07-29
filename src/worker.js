@@ -91,6 +91,20 @@ ipcRenderer.on('remove-compiler', (e, id) => {
     }
 })
 
+ipcRenderer.on('startServer', (e, id) => {
+
+    // find the project from the array
+    const project = projects.find(item => {
+
+      return item.project.id == id
+    })
+
+    if (project) {
+
+        project.launch()
+    }
+})
+
 
 
 

@@ -1,10 +1,12 @@
+const electron = require('electron')
 const {ipcMain, app, BrowserWindow, Tray} = require('electron')
 
 const fs = require('fs')
-const path = require('path')
+const path = require('upath')
 const url = require('url')
 const store = require('./src/store')
 const keytar = require('keytar')
+const parse = require('parse-git-config')
 
 const windows = require('./windows')
 
@@ -13,6 +15,7 @@ let logs
 let services
 let worker
 let projects
+let popover
 
 if (process.env.NODE_ENV === 'development') {
 
@@ -40,6 +43,17 @@ const kickoff = () => {
         alwaysOnTop: true
     })
 
+    popover = windows.create('popover', {
+        width: 150,
+        show: false,
+        frame: false,
+        fullscreenable: false,
+        resizable: false,
+        transparent: true,
+        alwaysOnTop: true,
+        hasShadow: false
+    })
+
     services = windows.create('services', {
         width: 500,
         height: 500,
@@ -57,9 +71,11 @@ const kickoff = () => {
     })
 
     projects = windows.create('projects', {
+        maximizable: false,
         width: 320,
         height: 500,
         frame: false,
+        titleBarStyle: 'hiddenInset',
         show: true,
     })
 }
@@ -93,10 +109,12 @@ const listen = () => {
 
         store.getAllProjects().then(results => {
 
+            let loadedProjects
+
             // Send the project to the compiler
             if (Object.prototype.toString.call(results) === '[object Array]') {
 
-                results.forEach(project => {
+                loadedProjects = results.map(project => {
 
                     // Check if the project folder still existst when booting
                     if (!fs.existsSync(project.path)) {
@@ -105,14 +123,30 @@ const listen = () => {
 
                     } else {
 
+                        // Check if the project is coming from git and append that to the project before sending it to the UI
+                        const config = parse.sync({
+                            cwd: project.path,
+                            path: '.git/config'
+                        })
+
+                        if (config['remote "origin"']) {
+
+                            project.repo = config['remote "origin"'].url
+                        }
+
+                        // Persist to storage
+                        store.setProjectById(project)
+
                         // Create a new project in the worker
                         worker.webContents.send('create-compiler', project)
                     }
+
+                    return project
                 })
             }
 
             // Let the DOM know that we done loading
-            projects.webContents.send('projects-loaded', Array.from(results))
+            projects.webContents.send('projects-loaded', loadedProjects)
         })
     })
 }
@@ -194,4 +228,31 @@ ipcMain.on('reloadActiveProject', e => {
     services.webContents.send('reloadActiveProject')
 })
 
+ipcMain.on('set-service-status', (e, status, service, message = null) => {
 
+    console.log('receiving set service status', status, service)
+    services.webContents.send('set-service-status', status, service)
+
+    // Update the pop with the error message
+    if (status == 'error') {
+
+        popover.webContents.send('set-popover', message)
+
+        // @todo: update the height of the window with the height of the content
+    }
+})
+
+ipcMain.on('show-popover', () => {
+
+    const cursorPos = electron.screen.getCursorScreenPoint()
+    const windowBounds = popover.getBounds()
+    const x = Math.round(cursorPos.x - (windowBounds.width / 2))
+    const y = Math.round(cursorPos.y - (windowBounds.height + 10))
+    popover.setPosition(x, y, false)
+    popover.showInactive()
+})
+
+ipcMain.on('hide-popover', () => {
+
+    popover.hide()
+})

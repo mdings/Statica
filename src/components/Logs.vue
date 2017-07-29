@@ -82,7 +82,7 @@
 
             log(e, data) {
 
-                if (data.lines) {
+                if (data.lines && data.filename) {
 
                     data.lines = []
                     let i  = 1

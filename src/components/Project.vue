@@ -41,6 +41,13 @@
             this.menu = new Menu()
 
             this.menu.append(new MenuItem({
+                label: 'Refresh project',
+                click() {
+                    vm.refreshProject()
+                }
+            }))
+
+            this.menu.append(new MenuItem({
                 label: 'Open page',
                 click() {
                     vm.startProject()
@@ -131,6 +138,11 @@
             changeName(e) {
 
                 this.placeholder = e.target.textContent
+            },
+
+            refreshProject() {
+
+                console.log('i could refresh')
             },
 
             removeProject() {

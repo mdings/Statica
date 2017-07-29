@@ -1,14 +1,28 @@
 const path = require('upath')
+const fs = require('fs')
 const chokidar = require('chokidar')
 const extensions  = require('./extensions')
 const fileTypes  = require('require-dir')('./files')
 const ignored = require('./ignored')
-const {app} = require('electron').remote
-const {ipcRenderer} = require('electron')
+const electron = require('electron')
+const {app, BrowserWindow} = electron.remote
+const {ipcRenderer} = electron
+const browsersync = require('browser-sync')
 
+/**
+ * Checks whether a folder or filename starts with an underscore
+ * @param {string} filename
+ * @returns {boolean}
+ */
 const hasUnderscore = (filename) => {
 
-    return path.parse(filename).base.charAt(0) == '_'
+    let parts = filename.split('/')
+    parts = parts.filter(part => {
+
+        return part.charAt(0) == '_'
+    })
+
+    return parts.length > 0 ? true : false
 }
 
 
@@ -16,9 +30,8 @@ module.exports = class Compiler {
 
     constructor(project) {
 
-        console.log('creating project')
-
         this.project = project
+        this.ready = false // we're ready when all files have been indexed
         this.files = []
 
         this.watcher = chokidar.watch(project.path, {
@@ -33,6 +46,14 @@ module.exports = class Compiler {
             .on('change', filename => this.change(filename))
             .on('ready', () => {
 
+                this.ready = true
+
+                // @todo: open a new background window and to background compilation in a separate window
+                // 1. Open background window with remote
+                // 2. On page-ready event pass the files to that window
+                // 3. Render all files and have them return a promise
+                // 4. When done (either successful or not) close the window again
+
                 console.log('project ready')
                 console.log(this.files)
             })
@@ -46,26 +67,20 @@ module.exports = class Compiler {
 
     add(filename) {
 
-        const ext = path.extname(filename).toLowerCase()
-        const type = extensions[ext] || 'other'
-        const file = new fileTypes[type](filename, this.project)
+        console.log(hasUnderscore(filename))
 
         if(!hasUnderscore(filename)) {
 
+            console.log(filename + 'has no underscroe')
+            const ext = path.extname(filename).toLowerCase()
+            const type = extensions[ext] || 'other'
+            const file = new fileTypes[type](filename, this.project)
             const project = this.project
 
             this.files.push(file)
 
             // Consolidate file errors to be able to pass them to the application
             file.on('error', (message, filename, line) => {
-
-                // @deprecate this
-                // Notify the UI of a status update
-                // ipcRenderer.send('status-update', {
-
-                //     status: 'error',
-                //     project
-                // })
 
                 ipcRenderer.send('project-error', {
 
@@ -88,7 +103,16 @@ module.exports = class Compiler {
                     })
                 }, 500)
             })
+
+            if (this.ready) {
+
+                // Immediately render the files when added..
+                file.render()
+            }
         }
+
+        console.log('ckokidar: add')
+        console.log(this.files)
     }
 
     /**
@@ -99,12 +123,13 @@ module.exports = class Compiler {
 
     unlink(filename) {
 
-        // console.log('ckokidar: remove', filename)
-
         this.files = this.files.filter(file => {
 
             return file.filename != filename
         })
+
+        console.log('ckokidar: remove')
+        console.log(this.files)
 
     }
 
@@ -115,25 +140,37 @@ module.exports = class Compiler {
 
     unlinkDir(dirname) {
 
-        console.log('unlinking Dir', this.project.path, dirname)
+        if (!fs.existsSync(this.project.path)) {
 
-        if (this.project.path == dirname) {
-
-            // Send a message to the main process that a folder has been removed
             ipcRenderer.send('unlink-project', this.project)
         }
     }
 
     change(filename) {
 
-        console.log('trigger change')
+        if (!this.ready) return
 
-        const file = this.files.find(file => {
+        let filesToRender
 
-            return file.filename == filename
-        })
+        // We're triggering a change to a partial here, so we should render all masters for that file
+        if (hasUnderscore(filename)) {
 
-        if (file) {
+            const ext = path.parse(filename).ext
+
+            filesToRender = this.files.filter(file => {
+
+                return path.parse(file.filename).ext == ext
+            })
+
+        } else {
+
+            filesToRender = this.files.filter(file => {
+
+                return file.filename == filename
+            })
+        }
+
+        if (filesToRender.length) {
 
             // Notify the UI of a project being processed
             ipcRenderer.send('status-update', {
@@ -142,25 +179,19 @@ module.exports = class Compiler {
                 project: this.project
             })
 
-            file.render()
+            filesToRender.forEach(file => file.render())
         }
     }
 
-    // launch() {
+    launch() {
 
-    //     this.render(this.files)
-
-    //     if (!this.browsersync.active) {
-
-    //         // const targetDir = `${app.getPath('userData')}/temp/${this.project.id}`
-
-    //         this.browsersync.init({
-    //             ui: false,
-    //             notify: false,
-    //             server: this.targetDir
-    //         });
-    //     }
-    // }
+        browsersync.init({
+            ui: false,
+            notify: false,
+            server: `${this.project.path}/build/`,
+            files: `${this.project.path}/build/**/*`
+        });
+    }
 
     destroy() {
 

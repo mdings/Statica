@@ -18,7 +18,8 @@
         <!-- Github pages -->
         <div v-show="exporter == 'github'" data-github>
             <input type="text" name="title" placeholder="title" required>
-            <input type="text" name="username" placeholder="username" required>
+            <input type="text" name="branch" placeholder="gh-pages">
+            <input type="text" name="username" placeholder="uername" required>
             <input type="password" name="password" required>
         </div>
         <!-- /Github pages -->

@@ -15,10 +15,13 @@ module.exports = class Page extends File {
     }
 
     //@TODO: Look into node streams (.pipe())
+
     render(resolve, reject) {
-        console.log(`rendering javascript: ${this.fileInfo.sourceFile}`)
-        const sourcePath = `${this.fileInfo.sourceDir}/${this.fileInfo.sourceFile}`
-        if(this.isMarkDown) {
+
+        const sourcePath = this.filename
+
+        if (this.isMarkDown) {
+
             // Find the closest layout file
             findUp(['_layout.pug'], {
                 cwd: this.fileInfo.sourceDir
@@ -34,15 +37,18 @@ module.exports = class Page extends File {
             })
 
         } else if (this.isPug) {
+
             const output = this.puggify(sourcePath, data)
             this.write(output, resolve)
 
         } else if (this.isHTML) {
-            this.read()
+
+            const input = this.read()
 
             // Enable partials for regular HTML-files
-            const output = this.input.replace(/\<\!-- @include (.*) --\>/g, (match, file) => {
-                return fs.readFileSync(`${this.fileInfo.sourceDir}/${file}`);
+            const output = input.replace(/\<\!-- @include (.*) --\>/g, (match, file) => {
+
+                return fs.readFileSync(`${this.project}/${file}`);
             })
 
             // Writeout
@@ -66,17 +72,17 @@ module.exports = class Page extends File {
     }
 
     get isHTML() {
-        return this.fileInfo.extension == '.html'
-            || this.fileInfo.extension == '.htm'
+        return path.parse(this.filename).ext == '.html'
+            || path.parse(this.filename).ext == '.htm'
     }
 
     get isMarkDown() {
-        return this.fileInfo.extension == '.md'
-            || this.fileInfo.extension == '.markdown'
+        return path.parse(this.filename).ext == '.md'
+            || path.parse(this.filename).ext == '.markdown'
     }
 
     get isPug() {
-        return this.fileInfo.extension == '.pug'
-            || this.fileInfo.extension == '.jade'
+        return path.parse(this.filename).ext == '.pug'
+            || path.parse(this.filename).ext == '.jade'
     }
 }
