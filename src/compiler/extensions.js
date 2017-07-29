@@ -1,8 +1,10 @@
 module.exports = {
     '.scss':    'stylesheet',
+    '.less':    'stylesheet',
     '.sass':    'stylesheet',
     '.styl':    'stylesheet',
     '.css':     'stylesheet',
+
     '.js':      'javascript',
 
     '.pug':     'page',

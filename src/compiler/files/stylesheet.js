@@ -1,6 +1,7 @@
 'use strict'
 
 const sass = require('node-sass')
+const less = require('less')
 const stylus = require('stylus')
 const postcss = require('postcss')
 const path = require('upath')
@@ -77,6 +78,33 @@ module.exports = class Stylesheet extends File {
 
             this.process(stream)
         }
+
+        if (this.isLess) {
+
+            less.render(stream, {
+
+                filename: this.filename
+            }, (err, output) => {
+
+                if (err) {
+
+                    /* error object
+                    {
+                        column: 18
+                        extract: array of lines,
+                        filename,
+                        line: 11,
+                        message: message
+                    }
+                    */
+                    console.log(err)
+
+                } else {
+
+                    this.process(output.css)
+                }
+            })
+        }
     }
 
     process(css) {
@@ -91,6 +119,11 @@ module.exports = class Stylesheet extends File {
 
             this.write(result.css)
         })
+    }
+
+    get isLess() {
+
+        return path.parse(this.filename).ext == '.less'
     }
 
     get isStylus() {
