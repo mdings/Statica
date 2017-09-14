@@ -3,9 +3,10 @@
 const rollup = require('rollup')
 const babel = require('rollup-plugin-babel')
 const cjs = require('rollup-plugin-commonjs')
-const resolve = require('rollup-plugin-node-resolve');
+const resolve = require('rollup-plugin-node-resolve')
 const {app} = require('electron').remote
 const File = require('../file')
+const path = require('upath')
 
 let cache
 
@@ -17,6 +18,8 @@ module.exports = class Javascript extends File {
     }
 
     render() {
+
+        const file = this
 
         rollup.rollup({
 
@@ -38,7 +41,7 @@ module.exports = class Javascript extends File {
             onwarn(warning) {
 
                 // Don't print out any warning to the error log
-                console.log(warning)
+                file.emit('notification', warning.message, path.parse(file.filename))
                 return
             }
         }).then(bundle => {
@@ -64,8 +67,7 @@ module.exports = class Javascript extends File {
 
         }).catch(err => {
 
-            console.log(err)
-            this.emit('error', err.message)
+            this.emit('error', err.message.replace(`${this.filename}:`, ''), err.code, path.parse(this.filename))
         })
     }
 

@@ -4,8 +4,7 @@ var webpack = require('webpack')
 module.exports = {
   entry: {
     projects: './src/projects.js',
-    services: './src/services.js',
-    logs: './src/logs.js',
+    services: './src/services.js'
   },
   output: {
     path: path.resolve(__dirname, './dist/'),
@@ -13,8 +12,8 @@ module.exports = {
     filename: '[name].build.js'
   },
   node: {
-    __dirname: false,
-    __filename: false
+    __dirname: true,
+    __filename: true
   },
   target: 'electron',
   module: {

@@ -33,15 +33,9 @@ module.exports = class Stylesheet extends File {
 
                 if (err) {
 
-                    /* error object
-                    {
-                        message: "<info about the error>",
-                        line: <line of the error>
-                    }
-                    */
-                    const message = `<strong>${err.message}</strong><br>
-                    <span class="line">Error at line ${err.line}</span>`
-                    this.emit('error', message, path.parse(this.filename), err.line)
+                    const message = err.message
+                    const line = err.line
+                    this.emit('error', message, line, path.parse(this.filename))
 
                 } else {
 
@@ -58,13 +52,12 @@ module.exports = class Stylesheet extends File {
 
                 if (err) {
 
-                    /* error object
-                    {
-                        name: "parseError",
-                        message: <code and info about the error >
-                    }
-                    */
-                    this.emit('error', err.message)
+                    // Strips the code that is provided because that can get larger than the actual column width available
+                    const split = err.message.split(/\r?\n/)
+                    const line = err.message.match(/\d+/) //gets the first digit which is line
+                    const message = `${split.slice(-2, -1)}`
+                    this.emit('error', message, line, path.parse(this.filename))
+
 
                 } else {
 
@@ -88,16 +81,9 @@ module.exports = class Stylesheet extends File {
 
                 if (err) {
 
-                    /* error object
-                    {
-                        column: 18
-                        extract: array of lines,
-                        filename,
-                        line: 11,
-                        message: message
-                    }
-                    */
-                    console.log(err)
+                    const message = err.message
+                    const line = err.line
+                    this.emit('error', message, line, path.parse(this.filename))
 
                 } else {
 
@@ -109,7 +95,7 @@ module.exports = class Stylesheet extends File {
 
     process(css) {
 
-        // Run postCSS, which does automatic prefixing
+        // Run postCSS, which also does automatic prefixing
         postcss([
 
             require('postcss-cssnext')
@@ -118,6 +104,10 @@ module.exports = class Stylesheet extends File {
         .then(result => {
 
             this.write(result.css)
+        }).catch(err => {
+
+            // do nothing, most errors are likely to already have been caught by the preprocessor
+            return
         })
     }
 

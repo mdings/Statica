@@ -1,5 +1,6 @@
 %input {
 
+    transition: background-color 150ms ease-in-out;
     padding: 0 8px;
     height: 26px;
     line-height: 26px;
@@ -7,6 +8,17 @@
     border-radius: 4px;
     font-size: 14px;
     background-color: #E8EAEA;
+    outline: 0;
+
+    &:focus {
+
+        background-color: #fff;
+        border-color: #6db3fd;
+        box-shadow: 2px 2px 0 #6db3fd,
+            -2px -2px 0 #6db3fd,
+            -2px 2px 0 #6db3fd,
+            2px -2px 0 #6db3fd;
+    }
 }
 
 %button {
@@ -23,6 +35,12 @@
 
         background-color: #ddd;
         background-image: none;
+    }
+
+    &:focus {
+
+        border: 1px solid #E8EAEA;
+        box-shadow: none;
     }
 }
 

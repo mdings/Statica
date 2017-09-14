@@ -62,6 +62,7 @@ module.exports = class Page extends File {
     }
 
     puggify(file, data) {
+
         const compiled = pug.compileFile(file)
         return compiled(data)
     }
@@ -72,16 +73,19 @@ module.exports = class Page extends File {
     }
 
     get isHTML() {
+
         return path.parse(this.filename).ext == '.html'
             || path.parse(this.filename).ext == '.htm'
     }
 
     get isMarkDown() {
+
         return path.parse(this.filename).ext == '.md'
             || path.parse(this.filename).ext == '.markdown'
     }
 
     get isPug() {
+
         return path.parse(this.filename).ext == '.pug'
             || path.parse(this.filename).ext == '.jade'
     }

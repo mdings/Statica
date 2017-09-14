@@ -8,6 +8,7 @@ const electron = require('electron')
 const {app, BrowserWindow} = electron.remote
 const {ipcRenderer} = electron
 const browsersync = require('browser-sync')
+const notifier = require('node-notifier')
 
 /**
  * Checks whether a folder or filename starts with an underscore
@@ -54,6 +55,7 @@ module.exports = class Compiler {
                 // 3. Render all files and have them return a promise
                 // 4. When done (either successful or not) close the window again
 
+                ipcRenderer.send('project-ready', project)
                 console.log('project ready')
                 console.log(this.files)
             })
@@ -71,7 +73,7 @@ module.exports = class Compiler {
 
         if(!hasUnderscore(filename)) {
 
-            console.log(filename + 'has no underscroe')
+
             const ext = path.extname(filename).toLowerCase()
             const type = extensions[ext] || 'other'
             const file = new fileTypes[type](filename, this.project)
@@ -80,15 +82,30 @@ module.exports = class Compiler {
             this.files.push(file)
 
             // Consolidate file errors to be able to pass them to the application
-            file.on('error', (message, filename, line) => {
+            file.on('error', (message, line, filename) => {
 
-                ipcRenderer.send('project-error', {
+                notifier.notify({
 
-                    project,
-                    message,
-                    filename,
-                    line
-                })
+                    title: `Failed to compile ${project.name}`,
+                    subtitle: `Error on line ${line} of ${filename.base}`,
+                    message: message,
+                    group: 'statica', // only display one notification per app
+                    sound: 'Purr',
+                    timeout: 10000,
+                });
+            })
+
+            file.on('notification', (warning, filename) => {
+
+                notifier.notify({
+
+                    title: `Warning for ${project.name}`,
+                    subtitle: `${filename.base}`,
+                    message: warning,
+                    group: 'statica', // only display one notification per app
+                    sound: 'Purr',
+                    timeout: 10000,
+                });
             })
 
             file.on('success', e => {

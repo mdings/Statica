@@ -1,31 +1,23 @@
 <template>
     <div id="inputs">
-        <select @change="changeExporter">
-            <option value="ftp" selected>FTP</option>
-            <option value="github">Github pages</option>
-        </select>
 
-        <!-- FTP credentials -->
-        <div v-show="exporter == 'ftp'" data-ftp>
-            <input type="text" name="title" placeholder="title" required>
-            <input type="text" name="host" placeholder="host" required>
-            <input type="text" name="port" placeholder="port">
-            <input type="text" name="username" placeholder="username" required>
-            <input type="password" name="password" required>
+        <div v-if="action == 'add'">
+            <label>Choose a service</label>
+            <select @change="changeExporter" v-model="exporter">
+                <option value="FTP">FTP</option>
+                <option value="GithubPages">Github pages</option>
+            </select>
+            <!-- dynamic component -->
+            <component :is="exporter" :ref="exporter"></component>
+            <button class="confirm" @click="confirm" :disabled="disabled">Add service</button>
         </div>
-        <!-- /FTP credentials -->
 
-        <!-- Github pages -->
-        <div v-show="exporter == 'github'" data-github>
-            <input type="text" name="title" placeholder="title" required>
-            <input type="text" name="branch" placeholder="gh-pages">
-            <input type="text" name="username" placeholder="uername" required>
-            <input type="password" name="password" required>
+        <div v-if="action == 'edit'">
+            <!-- dynamic component -->
+            <component :is="activeService.type" :service="activeService" :ref="exporter"></component>
+            <button class="confirm" @click="confirm" :disabled="disabled">Update service</button>
         </div>
-        <!-- /Github pages -->
 
-        <button @click="closePanel">Cancel</button>
-        <button @click="addExporter">Ok</button>
     </div>
 </template>
 
@@ -34,17 +26,51 @@
     const {ipcRenderer} = require('electron')
     const ftp = require('ftp-deploy')
     const remote = require('electron').remote
-    const store = require('../store')
+
+    import FTP from './services/FTP.vue'
+    import GithubPages from './services/GithubPages.vue'
 
     export default {
 
-        props: ['project'],
+        components: {
+            FTP,
+            GithubPages
+        },
+
+        props: ['action'],
 
         data() {
 
             return {
 
-                exporter: 'ftp', // defaults to ftp
+                exporter: 'FTP',
+                disabled: true
+            }
+        },
+
+        created() {
+
+            this.$root.$on('set-button', isDisabled => {
+
+                this.disabled = isDisabled
+            })
+
+            this.$root.$on('emitFormData', data => {
+
+                this[this.action].call(this, data)
+            })
+        },
+
+        computed: {
+
+            activeService() {
+
+                return this.$store.getters.activeService
+            },
+
+            services() {
+
+                return this.$store.getters.services
             }
         },
 
@@ -53,74 +79,62 @@
             changeExporter(e) {
 
                 this.exporter = e.target.value
+                this.disabled = true
             },
 
-            addExporter() {
+            add(data) {
 
-                // Check if there are any required fields left out blank
-                const fields = this.$el.querySelectorAll(`[data-${this.exporter}] [required]`)
-                Array.from(fields).forEach(field => {
-
-                    field.classList.toggle('is-invalid', !field.checkValidity())
-                })
-
-                const errors = this.$el.querySelectorAll(`[data-${this.exporter}] .is-invalid`)
-                if(errors.length) return
+                console.log(data)
 
                 const id = require('shortid').generate()
 
                 let exporter = {
+
                     type: this.exporter,
                     id: id
                 }
 
-                // Get all the inputs that should be processed
-                let inputs = this.$el.querySelectorAll(`[data-${this.exporter}] > input`)
-                const password = this.findPasswordField(inputs)
-
                 // Store password fields safely with keytar
-                if (password) {
+                if (data.password) {
 
                     ipcRenderer.send('storePassword', {
 
                         // projectId: this.project,
                         serviceId: id,
-                        password: password.value
+                        password: data.password
                     })
+
+                    // remove the password field from the obj
+                    delete data.password
                 }
 
-                // Remove all password fields before storing to json
-                Array.from(inputs).filter(input => {
-
-                    return input.getAttribute('type') != 'password'
-
-                }).forEach(input => {
-
-                    exporter[input.getAttribute('name')] = input.value.trim()
-                })
-
-                // Add the exporter to the retrieved project
-                this.project.services.push(exporter)
-
-                console.log(exporter)
-                store.setProjectById(this.project)
-
-                // Hide the window
-                this.$root.$emit('closeProjectPanel')
+                Object.assign(exporter, data)
+                this.$store.dispatch('addService', exporter)
             },
 
-            findPasswordField(inputs) {
+            edit(data) {
 
-                return Array.from(inputs).find(input => {
+                // Store password fields safely with keytar
+                if (data.password) {
 
-                    return input.getAttribute('type') == 'password'
-                })
+                    ipcRenderer.send('storePassword', {
+
+                        // projectId: this.project,
+                        serviceId: data.id,
+                        password: data.password
+                    })
+
+                    // remove the password field from the obj
+                    delete data.password
+                }
+
+                this.$store.dispatch('editService', data)
             },
 
+            confirm() {
 
-            closePanel() {
-
-                this.$root.$emit('closeProjectPanel')
+                this.$root.$emit('closePanel')
+                this.$root.$emit('getFormData')
             }
         }
     }

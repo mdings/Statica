@@ -1,9 +1,15 @@
 <template>
     <section id="projects" v-bind:class="{ empty: !projects.length }">
-        <div class="projects__divider" v-show="favProjects.length">Favourite projects</div>
-        <Project v-for="project in favProjects" :key="project.id" :project="project"></Project>
-        <div class="projects__divider" v-show="otherProjects.length && favProjects.length">Other projects</div>
-        <Project v-for="project in otherProjects" :key="project.id" :project="project"></Project>
+        <div class="projects__divider" v-show="favProjects.length" data-sticky-container>
+            <span class="sticky">Favourites</span>
+            <Project v-for="project in favProjects" :key="project.id" :project="project"></Project>
+        </div>
+
+        <div class="projects__divider" data-sticky-container>
+            <span class="sticky" v-show="otherProjects.length && favProjects.length">Others</span>
+            <Project v-for="project in otherProjects" :key="project.id" :project="project"></Project>
+        </div>
+
         <div v-show="!projects.length" class="emptystate">
             There a no projects yet. Click the '+' to add a new folder or drag and drop one in the projects area.
         </div>
@@ -16,13 +22,50 @@
 
     const path = require('upath')
     const fs = require('fs')
+    const persist = require('../vuex/persist')
     const {dialog} = require('electron').remote
     const {ipcRenderer} = require('electron')
-    const store = require('../store')
+    const parse = require('parse-git-config')
 
     export default {
 
         created() {
+
+            // When the app is started, load in all the projects and send them to the main process to create a compiler for them. When the project is initialised the project can be unblocked
+            persist.getAllProjects().then(projects => {
+
+                projects.forEach(project => {
+
+                    // Check if the path still exists for the project
+                    if (!fs.existsSync(project.path)) {
+
+                        project.unlinked = true
+
+                    } else {
+
+                        project.blocked = true
+                    }
+
+                    // Check if the project is coming from git and append that to the project before sending it to the UI
+                    const config = parse.sync({
+                        cwd: project.path,
+                        path: '.git/config'
+                    })
+
+                    if (config['remote "origin"']) {
+
+                        project.repo = config['remote "origin"'].url
+                    }
+
+                    // Persist to storage
+                    persist.setProjectById(project)
+
+                    this.projects.push(project)
+
+                    // Create the compiler
+                    ipcRenderer.send('create-compiler', project)
+                })
+            })
 
             // drop functionality
             document.body.ondrop = (e) => {
@@ -42,9 +85,9 @@
             this.$root.$on('remove-project', this.removeProject)
             this.$root.$on('update-project', this.updateProject)
 
-            ipcRenderer.on('projects-loaded', this.loadProjects)
+            ipcRenderer.on('project-ready', this.enableProject)
+            // ipcRenderer.on('projects-loaded', this.loadProjects)
             ipcRenderer.on('reload-projects', this.reloadProjects)
-
         },
 
         components: {
@@ -91,10 +134,17 @@
                 // })
             },
 
-            loadProjects(e, projects) {
+            enableProject(e, project) {
 
-                this.projects = projects
-                console.log('projects loaded')
+                this.projects.map(oProject => {
+
+                    if (oProject.id == project.id) {
+
+                        oProject.blocked = false
+                    }
+
+                    return oProject
+                })
             },
 
             reloadProjects(e, projects) {
@@ -112,6 +162,7 @@
 
                         id: require('shortid').generate(),
                         name: path.basename(folder),
+                        blocked: true,
                         path: folder,
                         services: [],
                         isRunning: false
@@ -122,13 +173,13 @@
                     ipcRenderer.send('create-compiler', project)
 
                     // Persist to db
-                    store.setAllProjects(this.projects)
+                    this.$store.dispatch('saveProjects', this.projects)
                 }
             },
 
             updateProject() {
 
-                store.setAllProjects(this.projects)
+                this.$store.dispatch('saveProjects', this.projects)
             },
 
             removeProject(project) {
@@ -138,7 +189,7 @@
                     return item != project
                 })
 
-                store.setAllProjects(this.projects)
+                this.$store.dispatch('saveProjects', this.projects)
 
                 ipcRenderer.send('remove-compiler', project)
             },

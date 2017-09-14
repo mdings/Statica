@@ -1,5 +1,5 @@
 <template>
-    <div class="project" v-bind:class="[status, {unlinked: project.unlinked, favourite: project.favourite}]">
+    <div class="project" v-bind:class="[status, {unlinked: project.unlinked, favourite: project.favourite, blocked: project.blocked}]">
         <svg class="project__fav" @click="toggleFav" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
             <g fill="none" fill-rule="evenodd">
                 <path d="M11.985 18.136L5.187 23l2.35-8.012L1 9.562l7.95-.07L11.985 1l2.95 8.562H23l-6.567 5.478 2.35 7.96-6.798-4.864z"/>
@@ -33,7 +33,9 @@
 
         created() {
 
-            ipcRenderer.on('status-update', this.updateStatus)
+            // This triggers a memory leak...
+            // find out why and how to prevebt
+            // ipcRenderer.on('status-update', this.updateStatus)
 
             const vm = this
 
@@ -196,6 +198,7 @@
         display: flex;
         justify-content: space-between;
         flex-shrink: 0;
+        text-align: left;
         width: 100%;
 
         &.favourite {
@@ -216,6 +219,11 @@
                 fill: #ccc;
                 pointer-events: none;
             }
+        }
+
+        &.blocked {
+
+            background: red;
         }
     }
 
