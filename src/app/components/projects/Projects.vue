@@ -22,7 +22,7 @@
 
     const path = require('upath')
     const fs = require('fs')
-    const persist = require('../vuex/persist')
+    const persist = require('../../vuex/persist')
     const {dialog} = require('electron').remote
     const {ipcRenderer} = require('electron')
     const parse = require('parse-git-config')

@@ -1,4 +1,4 @@
-<template id="ftp">
+<template id="github">
     <div>
         <!-- <div v-if="obj.type">
             <label>Service</label>
@@ -13,19 +13,12 @@
             v-model="obj.title"
             @keyup="checkValidity">
 
-        <label>Server</label>
-        <input required
+        <label>Branch</label>
+        <input
             type="text"
-            name="host"
-            placeholder="ftp.domain.com"
-            v-model="obj.server"
-            @keyup="checkValidity">
-
-        <label>Port (Optional)</label>
-        <input type="text" name="port" placeholder="80" v-model="obj.port">
-
-        <label>Homedir (Optional)</label>
-        <input type="text" name="homedir" placeholder="/" v-model="obj.homedir">
+            name="branch"
+            v-model="obj.branch"
+            placeholder="gh-pages">
 
         <label>Username</label>
         <input required
@@ -45,8 +38,7 @@
 </template>
 
 <script>
-
-    const forms = require('../../utils/forms')
+    const forms = require('../../../utils/forms')
 
     export default {
 

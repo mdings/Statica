@@ -45,12 +45,12 @@
 
 <script>
 
-    const exporters = require('../utils/exporters')
+    const exporters = require('../../utils/exporters')
     const remote = require('electron').remote
     const {ipcRenderer} = require('electron')
 
-    import '../sass/main.scss'
-    import Titlebar from './Titlebar.vue'
+    import '../../sass/main.scss'
+    import Titlebar from '../shared/Titlebar.vue'
     import Service from './Service.vue'
     import Inputs from './Inputs.vue'
 

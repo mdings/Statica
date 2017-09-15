@@ -6,7 +6,7 @@
   "main": "main.js",
   "scripts": {
     "postinstall": "./node_modules/.bin/electron-rebuild",
-    "dev": "cross-env NODE_ENV=development webpack-dev-server --inline --hot",
+    "dev": "cross-env NODE_ENV=development webpack --progress --colors --watch",
     "build": "cross-env NODE_ENV=production webpack --progress --hide-modules",
     "version": "electron -v",
     "start": "concurrently \"npm run electron\" \"npm run dev\"",
@@ -61,6 +61,7 @@
     "ftp-client": "^0.2.2",
     "ftp-deploy": "^1.2.1",
     "gh-pages": "^1.0.0",
+    "hard-source-webpack-plugin": "^0.4.9",
     "keytar": "^3.0.2",
     "node-dir": "^0.1.17",
     "node-notifier": "^5.1.2",

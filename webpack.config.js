@@ -3,8 +3,7 @@ var webpack = require('webpack')
 
 module.exports = {
   entry: {
-    projects: './src/projects.js',
-    services: './src/services.js'
+    main: './src/app/main.js',
   },
   output: {
     path: path.resolve(__dirname, './dist/'),
@@ -42,12 +41,7 @@ module.exports = {
     alias: {
       'vue$': 'vue/dist/vue'
     }
-  },
-  devServer: {
-    historyApiFallback: true,
-    noInfo: true
-  },
-  devtool: '#eval-source-map'
+  }
 }
 
 if (process.env.NODE_ENV === 'production') {

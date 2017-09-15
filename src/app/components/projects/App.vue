@@ -14,13 +14,12 @@
 
 <script>
 
-    import '../sass/main.scss'
-    import Titlebar from './Titlebar.vue'
+    import '../../sass/main.scss'
+    import Titlebar from '../shared/Titlebar.vue'
     import Projects from './Projects.vue'
 
     const {ipcRenderer} = require('electron')
     let isDragging = false
-
 
     export default {
 

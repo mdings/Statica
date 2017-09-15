@@ -7,14 +7,7 @@ module.exports = {
         // Instantiate the actual window and load the URL
         const win = new BrowserWindow(options)
 
-        if (process.env.NODE_ENV === 'development') {
-
-            win.loadURL(`http://localhost:8080/${name}.html`)
-
-        } else {
-
-            win.loadURL(`file://${__dirname}/${name}.html`)
-        }
+        win.loadURL(`file://${__dirname}/${name}.html`)
 
         // Open dev tools while developing
         if (process.env.NODE_ENV === 'development') {

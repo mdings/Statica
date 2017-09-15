@@ -4,7 +4,7 @@ const {ipcMain, app, BrowserWindow, Tray} = require('electron')
 const fs = require('fs')
 const path = require('upath')
 const url = require('url')
-const store = require('./src/vuex/persist')
+const store = require('./src/app/vuex/persist')
 const keytar = require('keytar')
 const parse = require('parse-git-config')
 
@@ -16,7 +16,10 @@ let projects
 
 if (process.env.NODE_ENV === 'development') {
 
-    require('electron-reload')(__dirname)
+    require('electron-reload')(__dirname, {
+        electron: path.join(__dirname, 'node_modules', '.bin', 'electron'),
+        hardResetMethod: 'exit'
+    })
 }
 
 // Don't show the app in the doc, we have doc

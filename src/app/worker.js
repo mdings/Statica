@@ -3,10 +3,7 @@
 const path = require('upath')
 const chokidar = require('chokidar')
 const {ipcRenderer} = require('electron')
-const fileTypes  = require('require-dir')('./compiler/files')
-const extensions  = require('./compiler/extensions')
-const ignored = require('./compiler/ignored')
-const Statica = require('./compiler/statica')
+const Statica = require('../compiler/statica')
 const fs = require('fs')
 
 const projects = []

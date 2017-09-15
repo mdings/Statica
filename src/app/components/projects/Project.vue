@@ -187,7 +187,7 @@
 
 <style lang="sass" scoped>
 
-    @import "../sass/settings";
+    @import "../../sass/settings";
 
     .project {
 
@@ -223,7 +223,7 @@
 
         &.blocked {
 
-            background: red;
+            background: orange;
         }
     }
 
