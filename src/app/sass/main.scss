@@ -50,6 +50,8 @@
             overflow-y: scroll; /* has to be scroll, not auto */
             display: flex;
             flex-direction: column;
+            position: relative;
+            z-index: 9;
 
             &.empty {
 
@@ -86,6 +88,7 @@
                     line-height: 12px;
                     font-size: 12px;
                     border-radius: 10px;
+                    margin: 9px 0;
                 }
 
 

@@ -14,12 +14,9 @@ module.exports = class Stylesheet extends File {
         super(filename, project)
     }
 
-    render() {
+    sass() {
 
-        const stream = this.read()
-
-        // If the files is SASS
-        if (this.isSass) {
+        return new Promise((resolve, reject) => {
 
             sass.render({
 
@@ -35,19 +32,20 @@ module.exports = class Stylesheet extends File {
 
                     const message = err.message
                     const line = err.line
-                    this.emit('error', message, line, path.parse(this.filename))
-
-                } else {
-
-                    this.process(result.css.toString('utf8'))
+                    return reject({message, line})
                 }
+
+                resolve(result.css.toString('utf8'))
             })
-        }
+        })
+    }
 
-        // If the file is Stylus
-        if (this.isStylus) {
+    stylus() {
 
-            console.log('rendering stylus')
+        return new Promise((resolve, reject) => {
+
+            const stream = this.read()
+
             stylus.render(stream, (err, output) => {
 
                 if (err) {
@@ -56,23 +54,19 @@ module.exports = class Stylesheet extends File {
                     const split = err.message.split(/\r?\n/)
                     const line = err.message.match(/\d+/) //gets the first digit which is line
                     const message = `${split.slice(-2, -1)}`
-                    this.emit('error', message, line, path.parse(this.filename))
-
-
-                } else {
-
-                    this.process(output)
+                    return reject({message, line})
                 }
+
+                resolve(output)
             })
-        }
+        })
+    }
 
-        // If the file is regular css
-        if (this.isCss) {
+    less() {
 
-            this.process(stream)
-        }
+        return new Promise((resolve, reject) => {
 
-        if (this.isLess) {
+            const stream = this.read()
 
             less.render(stream, {
 
@@ -83,31 +77,84 @@ module.exports = class Stylesheet extends File {
 
                     const message = err.message
                     const line = err.line
-                    this.emit('error', message, line, path.parse(this.filename))
-
-                } else {
-
-                    this.process(output.css)
+                    return reject({message, line})
                 }
+
+                resolve(output.css)
             })
+        })
+    }
+
+    async render(isProduction = false) {
+
+        // Set the production flag
+        this.isProduction = isProduction
+
+        let toRender
+
+        if (this.isSass) {
+
+            toRender = 'sass'
+        }
+
+        if (this.isStylus) {
+
+            toRender = 'stylus'
+        }
+
+        if (this.isLess) {
+
+            toRender = 'less'
+        }
+
+        // If the file is regular css don't run it through a preprocessor, otherwise run the preprocessor as specified
+        if (this.isCss) {
+
+            const stream = this.read()
+            const data = await this.process(stream)
+            this.write(data)
+
+        } else {
+
+            try {
+
+                let data
+                data = await this[toRender].call(this)
+                data = await this.process(data)
+                this.write(data)
+
+            } catch (e) {
+
+                // Only display errors when we're not optimizing
+                if (!this.isProduction) {
+
+                    this.emit('error', e.message, e.line, path.parse(this.filename))
+                }
+            }
         }
     }
 
     process(css) {
 
-        // Run postCSS, which also does automatic prefixing
-        postcss([
+        return new Promise((resolve, reject) => {
 
-            require('postcss-cssnext')
-        ])
-        .process(css)
-        .then(result => {
+            // Run postCSS, which also does automatic prefixing
+            postcss([
 
-            this.write(result.css)
-        }).catch(err => {
+                require('postcss-cssnext'),
+                require('postcss-csso')({
+                    comments: false, // Remove comments
+                })
+            ])
+            .process(css)
+            .then(result => {
 
-            // do nothing, most errors are likely to already have been caught by the preprocessor
-            return
+                resolve(result.css)
+
+            }).catch(err => {
+
+                reject(err)
+            })
         })
     }
 

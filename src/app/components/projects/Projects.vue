@@ -25,47 +25,13 @@
     const persist = require('../../vuex/persist')
     const {dialog} = require('electron').remote
     const {ipcRenderer} = require('electron')
-    const parse = require('parse-git-config')
 
     export default {
 
         created() {
 
             // When the app is started, load in all the projects and send them to the main process to create a compiler for them. When the project is initialised the project can be unblocked
-            persist.getAllProjects().then(projects => {
-
-                projects.forEach(project => {
-
-                    // Check if the path still exists for the project
-                    if (!fs.existsSync(project.path)) {
-
-                        project.unlinked = true
-
-                    } else {
-
-                        project.blocked = true
-                    }
-
-                    // Check if the project is coming from git and append that to the project before sending it to the UI
-                    const config = parse.sync({
-                        cwd: project.path,
-                        path: '.git/config'
-                    })
-
-                    if (config['remote "origin"']) {
-
-                        project.repo = config['remote "origin"'].url
-                    }
-
-                    // Persist to storage
-                    persist.setProjectById(project)
-
-                    this.projects.push(project)
-
-                    // Create the compiler
-                    ipcRenderer.send('create-compiler', project)
-                })
-            })
+            this.$store.dispatch('getAllProjects')
 
             // drop functionality
             document.body.ondrop = (e) => {
@@ -84,9 +50,6 @@
             // @TODO: move these two to project component and handle the operations by the store. Also saves some communication
             this.$root.$on('remove-project', this.removeProject)
             this.$root.$on('update-project', this.updateProject)
-
-            ipcRenderer.on('project-ready', this.enableProject)
-            // ipcRenderer.on('projects-loaded', this.loadProjects)
             ipcRenderer.on('reload-projects', this.reloadProjects)
         },
 
@@ -96,6 +59,11 @@
         },
 
         computed: {
+
+            projects() {
+
+                return this.$store.getters.projects
+            },
 
             favProjects() {
 
@@ -114,14 +82,6 @@
             }
         },
 
-        data() {
-
-            return {
-
-                projects: []
-            }
-        },
-
         methods: {
 
             clearStorage() {
@@ -132,19 +92,6 @@
 
                 //     this.projects = []
                 // })
-            },
-
-            enableProject(e, project) {
-
-                this.projects.map(oProject => {
-
-                    if (oProject.id == project.id) {
-
-                        oProject.blocked = false
-                    }
-
-                    return oProject
-                })
             },
 
             reloadProjects(e, projects) {
@@ -165,15 +112,12 @@
                         blocked: true,
                         path: folder,
                         services: [],
-                        isRunning: false
+                        isRunning: false,
+                        status: 'indexing'
                     }
 
-                    this.projects.push(project)
-
-                    ipcRenderer.send('create-compiler', project)
-
                     // Persist to db
-                    this.$store.dispatch('saveProjects', this.projects)
+                    this.$store.dispatch('addProject', project)
                 }
             },
 
@@ -184,14 +128,7 @@
 
             removeProject(project) {
 
-                this.projects = this.projects.filter((item) => {
-
-                    return item != project
-                })
-
-                this.$store.dispatch('saveProjects', this.projects)
-
-                ipcRenderer.send('remove-compiler', project)
+                this.$store.dispatch('removeProject', project)
             },
 
             openDialog() {

@@ -82,6 +82,9 @@ module.exports = {
                     return
                 }
 
+                // Optimize all the files in the build folder
+                ipcRenderer.send('optimize-project', project.id)
+
                 // Reads all the files in a directory
                 dir.paths(`${project.path}/build/`, (err, paths) => {
 

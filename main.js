@@ -16,10 +16,7 @@ let projects
 
 if (process.env.NODE_ENV === 'development') {
 
-    require('electron-reload')(__dirname, {
-        electron: path.join(__dirname, 'node_modules', '.bin', 'electron'),
-        hardResetMethod: 'exit'
-    })
+    // require('electron-reload')(`${__dirname}/dist/`)
 }
 
 // Don't show the app in the doc, we have doc
@@ -100,6 +97,11 @@ ipcMain.on('create-compiler', (e, project) => {
 ipcMain.on('remove-compiler', (e, project) => {
 
     worker.webContents.send('remove-compiler', project.id)
+})
+
+ipcMain.on('optimize-project', (e, id) => {
+
+    worker.webContents.send('optimize-project', id)
 })
 
 ipcMain.on('project-error', (e, data) => {

@@ -47,17 +47,14 @@ module.exports = class Compiler {
             .on('change', filename => this.change(filename))
             .on('ready', () => {
 
+                // @TODO: create a separate window to do an initial rendering of ALL the files?
                 this.ready = true
-
-                // @todo: open a new background window and to background compilation in a separate window
-                // 1. Open background window with remote
-                // 2. On page-ready event pass the files to that window
-                // 3. Render all files and have them return a promise
-                // 4. When done (either successful or not) close the window again
-
                 ipcRenderer.send('project-ready', project)
-                console.log('project ready')
-                console.log(this.files)
+                ipcRenderer.send('status-update', {
+
+                    status: 'ready',
+                    project
+                })
             })
     }
 
@@ -69,16 +66,14 @@ module.exports = class Compiler {
 
     add(filename) {
 
-        console.log(hasUnderscore(filename))
-
         if(!hasUnderscore(filename)) {
-
 
             const ext = path.extname(filename).toLowerCase()
             const type = extensions[ext] || 'other'
             const file = new fileTypes[type](filename, this.project)
             const project = this.project
 
+            // Add the file to the existing array
             this.files.push(file)
 
             // Consolidate file errors to be able to pass them to the application
@@ -127,9 +122,18 @@ module.exports = class Compiler {
                 file.render()
             }
         }
+    }
 
-        console.log('ckokidar: add')
-        console.log(this.files)
+    /**
+     * Optimizes all the project files in the build folder
+     */
+    async optimize() {
+
+        const renderFiles = this.files.map(file => file.render(true))
+        console.log(renderFiles)
+        await Promise.all(renderFiles)
+
+        // this.files.forEach(file => file.render(true))
     }
 
     /**

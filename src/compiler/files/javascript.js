@@ -7,6 +7,7 @@ const resolve = require('rollup-plugin-node-resolve')
 const {app} = require('electron').remote
 const File = require('../file')
 const path = require('upath')
+const uglifyjs = require('uglify-js');
 
 let cache
 
@@ -17,7 +18,10 @@ module.exports = class Javascript extends File {
         super(filename, project)
     }
 
-    render() {
+    async render(isProduction = false) {
+
+        // Set the production flag
+        this.isProduction = isProduction
 
         const file = this
 
@@ -54,7 +58,27 @@ module.exports = class Javascript extends File {
             }).then(result => {
 
                 cache = bundle
-                this.write(result.code)
+
+                // Optimize for production?
+                if (this.isProduction) {
+
+                    const optimized = uglifyjs.minify(result.code, {
+                        warnings: true
+                    })
+
+                    if (optimized.error) {
+
+                        file.emit('notification', optimized.error, path.parse(file.filename))
+
+                    } else {
+
+                        this.write(optimized.code)
+                    }
+
+                } else {
+
+                    this.write(result.code)
+                }
             })
 
             // // Alternatively, let Rollup do it for you

@@ -1,21 +1,27 @@
 <template>
-    <div class="project" v-bind:class="[status, {unlinked: project.unlinked, favourite: project.favourite, blocked: project.blocked}]">
-        <svg class="project__fav" @click="toggleFav" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <g fill="none" fill-rule="evenodd">
-                <path d="M11.985 18.136L5.187 23l2.35-8.012L1 9.562l7.95-.07L11.985 1l2.95 8.562H23l-6.567 5.478 2.35 7.96-6.798-4.864z"/>
-            </g>
-        </svg>
-        <div class="project__info">
-            <div class="project__name"
-                @dblclick="renameProject"
-                @keydown="preventEnter"
-                @keyup="changeName"
-                placeholder="Untitled project"
-                :contenteditable="this.isEditable == true">{{project.name}}</div>
-            <div class="project__path">{{project.path}}</div>
-            <div class="project__unlinked" v-show="project.unlinked">
-                Folder not found!
-                You can either <a href="javascript:void(0)">relink location</a> or <a href="javascript:void(0)" @click="removeProject">remove project</a>
+    <div class="project" v-bind:class="[{
+        unlinked: project.unlinked,
+        favourite: project.favourite
+    }]">
+        <div class="project__body">
+            <div class="project__row">
+                <svg class="project__fav" @click="toggleFav" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <g fill="none" fill-rule="evenodd">
+                        <path d="M11.985 18.136L5.187 23l2.35-8.012L1 9.562l7.95-.07L11.985 1l2.95 8.562H23l-6.567 5.478 2.35 7.96-6.798-4.864z"/>
+                    </g>
+                </svg>
+                <div class="project__name"
+                    @dblclick="renameProject"
+                    @keydown="preventEnter"
+                    @keyup="changeName"
+                    placeholder="Untitled project"
+                    :contenteditable="this.isEditable == true">
+                    {{project.name}}
+                </div>
+            </div>
+            <div class="project__row">
+                <div><span class="project__status" v-bind:class="project.status"></span></div>
+                <div class="project__path">{{project.path}}</div>
             </div>
         </div>
         <svg @click="openOptions" class="project__actions" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg"><path d="M0 0h48v48H0z" fill="none"/><path d="M24 16c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 4c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm0 12c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4z"/></svg>
@@ -98,7 +104,6 @@
             return {
 
                 placeholder: '',
-                status: 'success',
                 isEditable: false,
                 menu: null
             }
@@ -191,15 +196,15 @@
 
     .project {
 
-        padding: 13px 13px 13px 15px;
+        padding: 15px 13px 15px 12px;
         border-bottom: 1px solid #f1f1f1;
         font-size: 13px;
         position: relative;
         display: flex;
         justify-content: space-between;
         flex-shrink: 0;
-        text-align: left;
         width: 100%;
+        text-align: left;
 
         &.favourite {
 
@@ -212,6 +217,11 @@
             }
         }
 
+        &.blocked {
+
+            background: orange;
+        }
+
         &.unlinked {
 
             .project__actions {
@@ -220,33 +230,50 @@
                 pointer-events: none;
             }
         }
+    }
 
-        &.blocked {
+    .project__body {
 
-            background: orange;
+        overflow: hidden;
+        flex-grow: 1;
+    }
+
+    .project__row {
+
+        align-items: center;
+        display: flex;
+
+        & > *:first-child {
+
+            text-align: center;
+            margin-right: 10px;
+            flex: 0 0 20px;
+        }
+    }
+
+    .project__actions {
+
+        flex: 0 0 24px;
+        align-self: center;
+        margin-left: 15px;
+        fill: $color-blue;
+
+        &:hover {
+
+            fill: mix(#000, $color-blue, 20%);
         }
     }
 
     .project__fav {
 
-        height: 20px;
+        height: 19px;
         width: auto;
-        align-self: center;
-        margin-right: 15px;
         transition: transform 100ms ease-out;
-        flex-shrink: 0;
 
         path {
 
             fill: #ccc;
         }
-    }
-
-    .project__info {
-
-        flex-grow: 1;
-        max-width: 100%;
-        overflow: hidden;
     }
 
     .project__name {
@@ -257,7 +284,7 @@
         overflow: hidden;
         position: relative;
         text-overflow: ellipsis;
-        font-size: 15px;
+        font-size: 16px;
         color: #333;
         width: 100%;
 
@@ -285,6 +312,58 @@
         -webkit-user-select: none;
     }
 
+    .project__status {
+
+        display: inline-block;
+        width: 12px;
+        height: 12px;
+        background-color: transparent;
+        transform-origin: 50% 50%;
+        position: relative;
+        transform: translateY(3px);
+
+        &:before {
+
+            animation: spin 500ms linear infinite;
+            border-radius: 50%;
+            border: 1px solid transparent;
+            border-top-color: orange;
+            border-left-color: orange;
+            display: block;
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            transition: border-color 200ms cubic-bezier(0.77, 0, 0.175, 1);
+        }
+
+        &.ready {
+
+            &:before {
+
+                border-top-color: transparent;
+                border-left-color: transparent;
+            }
+        }
+
+        &.processing {
+
+            &:before {
+
+                border-top-color: $color-blue;
+                border-left-color: $color-blue;
+            }
+        }
+
+        &.success {
+
+            &:before {
+
+                border-top-color: transparent;
+                border-left-color: transparent;
+            }
+        }
+    }
     .project__unlinked {
 
         font-size: 11px;
@@ -295,20 +374,6 @@
         a {
 
             color: $color-blue;
-        }
-    }
-
-    .project__actions {
-
-        flex-shrink: 0;
-        align-self: center;
-        margin-left: 15px;
-        fill: $color-blue;
-        width: 24px;
-
-        &:hover {
-
-            fill: mix(#000, $color-blue, 20%);
         }
     }
 </style>

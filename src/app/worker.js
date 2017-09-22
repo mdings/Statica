@@ -9,9 +9,21 @@ const fs = require('fs')
 const projects = []
 
 
-ipcRenderer.on('optimize-project',(e, project) => {
+ipcRenderer.on('optimize-project', (e, id) => {
 
+    // find the project from the array
+    const project = projects.find(item => {
 
+        return item.project.id == id
+    })
+
+    if (project) {
+
+        project.optimize().then(e => {
+
+            console.log('done optimizing')
+        })
+    }
 })
 
 ipcRenderer.on('create-compiler', (e, project) => {

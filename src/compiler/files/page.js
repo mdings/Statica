@@ -16,7 +16,7 @@ module.exports = class Page extends File {
 
     //@TODO: Look into node streams (.pipe())
 
-    render(resolve, reject) {
+    async render(resolve, reject) {
 
         const sourcePath = this.filename
 
