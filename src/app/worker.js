@@ -6,56 +6,55 @@ const {ipcRenderer} = require('electron')
 const Statica = require('../compiler/statica')
 const fs = require('fs')
 
-const projects = []
-
+const compilers = []
 
 ipcRenderer.on('optimize-project', (e, id) => {
 
     // find the project from the array
-    const project = projects.find(item => {
+    const compiler = compilers.find(item => {
 
         return item.project.id == id
     })
 
-    if (project) {
+    if (compiler) {
 
-        project.optimize().then(e => {
+        compiler.optimize().then(() => {
 
-            console.log('done optimizing')
+            ipcRenderer.send('done-optimize-project', compiler.project)
         })
     }
 })
 
 ipcRenderer.on('create-compiler', (e, project) => {
 
-    projects.push(new Statica(project))
+    compilers.push(new Statica(project))
 })
 
 ipcRenderer.on('remove-compiler', (e, id) => {
 
     // find the project from the array
-    const project = projects.find(item => {
+    const compiler = compilers.find(item => {
 
       return item.project.id == id
     })
 
-    if (project) {
+    if (compiler) {
 
-        project.destroy()
+        compiler.destroy()
     }
 })
 
 ipcRenderer.on('startServer', (e, id) => {
 
     // find the project from the array
-    const project = projects.find(item => {
+    const compiler = compilers.find(item => {
 
       return item.project.id == id
     })
 
-    if (project) {
+    if (compiler) {
 
-        project.launch()
+        compiler.launch()
     }
 })
 

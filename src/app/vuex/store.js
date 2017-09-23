@@ -81,7 +81,6 @@ const store = new Vuex.Store({
             project.services = services
             persist.setProjectById(project)
 
-            console.log(project)
             state.activeService = service
         },
 

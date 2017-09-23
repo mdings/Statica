@@ -49,22 +49,24 @@ class File {
         const target = `${paths.dir}/${paths.name}${this.exportExtension}`
         const destination = `${this.project}/${target}`
 
-        // Create the dir if it does not exist yet
-        mkdirp.sync(path.dirname(destination))
+        return new Promise((resolve, reject) => {
 
-        console.log('writing to: ', path.parse(destination).base)
+            console.log('writing to: ', path.parse(destination).base)
 
-        // And write the file..!
-        fs.writeFile(destination, result, (err) => {
+            // Create the dir if it does not exist yet
+            mkdirp.sync(path.dirname(destination))
 
-            if (err) {
+            // And write the file..!
+            fs.writeFile(destination, result, err => {
 
-                this.emit('error', err)
+                if (err) {
 
-            } else {
+                    throw err
+                    return
+                }
 
-                this.emit('success', {})
-            }
+                resolve()
+            })
         })
     }
 }

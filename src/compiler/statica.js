@@ -103,21 +103,9 @@ module.exports = class Compiler {
                 });
             })
 
-            file.on('success', e => {
-
-                // Notify the UI of a status update
-                setTimeout(() => {
-
-                    ipcRenderer.send('status-update', {
-
-                        status: 'success',
-                        project
-                    })
-                }, 500)
-            })
-
             if (this.ready) {
 
+                // @TODO: there are no visual updates for this atm. See how we can improve?
                 // Immediately render the files when added..
                 file.render()
             }
@@ -130,10 +118,7 @@ module.exports = class Compiler {
     async optimize() {
 
         const renderFiles = this.files.map(file => file.render(true))
-        console.log(renderFiles)
         await Promise.all(renderFiles)
-
-        // this.files.forEach(file => file.render(true))
     }
 
     /**
@@ -200,7 +185,16 @@ module.exports = class Compiler {
                 project: this.project
             })
 
-            filesToRender.forEach(file => file.render())
+            filesToRender = filesToRender.map(file => file.render(true))
+
+            Promise.all(filesToRender).then(() => {
+
+                ipcRenderer.send('status-update', {
+
+                    status: 'success',
+                    project: this.project
+                })
+            })
         }
     }
 

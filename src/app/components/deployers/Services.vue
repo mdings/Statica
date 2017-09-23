@@ -119,12 +119,17 @@
                 }
             })
 
-            ipcRenderer.on('retrievePassword', (e, pass) => {
+            ipcRenderer.on('done-optimize-project', (e, project) => {
 
-                // This is when we get the signal back from the main project with the password/
-                // So we can go ahead and use the service to deploy against
-                const type = this.activeService.type
-                exporters[type](this.activeProject, this.activeService, pass, this)
+                console.log('start deploying', project)
+                const password = ipcRenderer.sendSync('retrievePassword', this.activeService.id)
+
+                // Run the exporter when done optimizing. Also check the active project is still the same compared with the optimized one
+                if (project.id == this.activeProject.id) {
+
+                    const type = this.activeService.type
+                    exporters[type](this.activeProject, this.activeService, password, this)
+                }
             })
 
             this.$root.$on('hideActivityLogger', () => {
@@ -191,11 +196,15 @@
 
             useExporter() {
 
-                // Send a signal to the main process to safely retrieve the password from Keytar
-                ipcRenderer.send('retrievePassword', {
+                console.log('using exporter!')
+                // Dispatch event to optimize project
+                ipcRenderer.send('optimize-project', this.activeProject.id)
+                if(!this.isActivityOpen) {
 
-                    serviceId: this.activeService.id
-                })
+                    this.isActivityOpen = true
+                }
+
+                this.log = 'Optimizing files, hold on..'
             }
         }
     }

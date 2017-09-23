@@ -128,7 +128,9 @@
 
             updateProjectName() {
 
-                this.project.name = this.placeholder
+                // Remove whitespace from name (like enters)
+                this.project.name = this.placeholder.replace(/^\s+|\s+$/g, '')
+                console.log(this.project.name)
                 this.$root.$emit('update-project', this.project)
                 this.isEditable = false
             },

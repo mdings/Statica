@@ -110,9 +110,20 @@ module.exports = class Stylesheet extends File {
         // If the file is regular css don't run it through a preprocessor, otherwise run the preprocessor as specified
         if (this.isCss) {
 
-            const stream = this.read()
-            const data = await this.process(stream)
-            this.write(data)
+            try {
+
+                const stream = this.read()
+                const data = await this.process(stream)
+                await this.write(data)
+
+            } catch (e) {
+
+                // Only display errors when we're not optimizing
+                if (!this.isProduction) {
+
+                    this.emit('error', e.reason, e.line, path.parse(this.filename))
+                }
+            }
 
         } else {
 
@@ -121,7 +132,7 @@ module.exports = class Stylesheet extends File {
                 let data
                 data = await this[toRender].call(this)
                 data = await this.process(data)
-                this.write(data)
+                await this.write(data)
 
             } catch (e) {
 

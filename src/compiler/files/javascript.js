@@ -18,15 +18,11 @@ module.exports = class Javascript extends File {
         super(filename, project)
     }
 
-    async render(isProduction = false) {
-
-        // Set the production flag
-        this.isProduction = isProduction
+    rollup() {
 
         const file = this
 
-        rollup.rollup({
-
+        return rollup.rollup({
             entry: this.filename,
             cache: cache,
             sourceMap: true,
@@ -44,55 +40,62 @@ module.exports = class Javascript extends File {
             ],
             onwarn(warning) {
 
-                // Don't print out any warning to the error log
                 file.emit('notification', warning.message, path.parse(file.filename))
-                return
             }
-        }).then(bundle => {
+        })
+    }
 
-            const result = bundle.generate({
+    optimize(code) {
+
+        return new Promise((resolve, reject) => {
+
+            const optimized = uglifyjs.minify(code, {
+                warnings: true
+            })
+
+            if (optimized.error) {
+
+                file.emit('notification', optimized.error, path.parse(file.filename))
+                return reject()
+            }
+
+            resolve(optimized)
+        })
+    }
+
+    async render(isProduction = false) {
+
+        // Set the production flag
+        this.isProduction = isProduction
+
+        try {
+
+            const data = await this.rollup()
+
+            cache = data
+
+            const bundle = await data.generate({
 
                 // output format - 'amd', 'cjs', 'es', 'iife', 'umd'
                 format: 'umd',
                 moduleName: 'Statica',
-            }).then(result => {
-
-                cache = bundle
-
-                // Optimize for production?
-                if (this.isProduction) {
-
-                    const optimized = uglifyjs.minify(result.code, {
-                        warnings: true
-                    })
-
-                    if (optimized.error) {
-
-                        file.emit('notification', optimized.error, path.parse(file.filename))
-
-                    } else {
-
-                        this.write(optimized.code)
-                    }
-
-                } else {
-
-                    this.write(result.code)
-                }
             })
 
-            // // Alternatively, let Rollup do it for you
-            // // (this returns a promise). This is much
-            // // easier if you're generating a sourcemap
-            // bundle.write({
-            //     format: 'cjs',
-            //     dest: 'bundle.js'
-            // });
+            if (this.isProduction) {
 
-        }).catch(err => {
+                const optimized = await this.optimize(bundle.code)
+                await this.write(optimized.code)
 
-            this.emit('error', err.message.replace(`${this.filename}:`, ''), err.code, path.parse(this.filename))
-        })
+            } else {
+
+                await this.write(bundle.code)
+            }
+
+        } catch (err) {
+
+            const message = err.message.replace(`${this.filename}:`, '')
+            this.emit('error', message, err.code, path.parse)
+        }
     }
 
     get exportExtension() {

@@ -104,6 +104,11 @@ ipcMain.on('optimize-project', (e, id) => {
     worker.webContents.send('optimize-project', id)
 })
 
+ipcMain.on('done-optimize-project', (e, project) => {
+
+    services.webContents.send('done-optimize-project', project)
+})
+
 ipcMain.on('project-error', (e, data) => {
 
     projects.webContents.send('project-error', data)
@@ -137,10 +142,10 @@ ipcMain.on('storePassword', (e, details) => {
     keytar.replacePassword('statica', details.serviceId, details.password)
 })
 
-ipcMain.on('retrievePassword', (e, details) => {
+ipcMain.on('retrievePassword', (e, serviceId) => {
 
-    const password = keytar.getPassword(`statica`, details.serviceId)
-    services.webContents.send('retrievePassword', password)
+    const password = keytar.getPassword(`statica`, serviceId)
+    e.returnValue = password
 })
 
 ipcMain.on('reloadActiveProject', e => {
