@@ -1,0 +1,53 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+body {
+
+    background: green;
+
+    &.is-active {
+
+        color: red;
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+div {
+
+    color: black;
+}
+
+p {
+
+    font-family: Arial, sans-serif;
+
+    span {
+
+        color: orange;
+    }
+}}
+

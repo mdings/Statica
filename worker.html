@@ -2,7 +2,9 @@
     <head></head>
     <body>
         <script>
-            require(`${process.cwd()}/src/app/worker.js`)
+
+            const {app} = require('electron').remote
+            require(`${app.getAppPath()}/src/app/worker.js`)
         </script>
     </body>
 </html>

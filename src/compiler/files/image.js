@@ -19,8 +19,11 @@ module.exports = class Image extends File {
 
         return imagemin([this.filename], destination, {
 
+
             plugins: [
-                imageminJpegtran(),
+                imageminJpegtran({
+                    progressive: true
+                }),
                 imageminPngquant({
                     quality: '65-80'
                 })
@@ -56,18 +59,24 @@ module.exports = class Image extends File {
 
     async render() {
 
-        const file = this.filename.replace(this.project, 'build')
+        const file = this.filename.replace(this.project.path, 'build')
         const paths = path.parse(file)
         const target = `${paths.dir}/opt-${paths.name}${this.exportExtension}`
-        const destination = `${this.project}/${target}`
+        const destination = `${this.project.path}/${target}`
 
         const files = await this.optimize(destination)
 
         if (files[0]) {
 
-            const newPath = files[0].path.replace(`opt-${paths.name}${this.exportExtension}/`, '')
-            await this.rename(files[0].path, newPath)
-            await this.rmdir(destination)
+            try {
+                const newPath = files[0].path.replace(`opt-${paths.name}${this.exportExtension}/`, '')
+                await this.rename(files[0].path, newPath)
+                await this.rmdir(destination)
+
+            } catch (err) {
+
+                return Promise.reject(err.message, this.filename)
+            }
         }
     }
 

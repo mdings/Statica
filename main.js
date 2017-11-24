@@ -7,7 +7,9 @@ const url = require('url')
 const store = require('./src/app/vuex/persist')
 const keytar = require('keytar')
 const parse = require('parse-git-config')
+const settings = require('electron-settings')
 
+console.log(keytar)
 const windows = require('./windows')
 
 let services
@@ -35,11 +37,18 @@ const kickoff = () => {
         show: false
     })
 
+    if (settings.has('bounds.services')) {
+
+        services.setBounds(settings.get('bounds.services'))
+    }
+
     worker = windows.create('worker', {
         width: 300,
         height: 300,
         show: true
     })
+
+    worker.webContents.openDevTools()
 
     projects = windows.create('projects', {
         maximizable: false,
@@ -49,6 +58,11 @@ const kickoff = () => {
         titleBarStyle: 'hiddenInset',
         show: true,
     })
+
+    if (settings.has('bounds.projects')) {
+
+        projects.setBounds(settings.get('bounds.projects'))
+    }
 }
 
 const listen = () => {
@@ -58,6 +72,37 @@ const listen = () => {
         services.webContents.send('emptyServices')
         services.hide()
         e.preventDefault()
+    })
+
+    services.on('move', e => {
+
+        // Set project bounds for the services window
+        const bounds = settings.get('bounds') || {}
+        bounds.services = services.getBounds()
+        settings.set('bounds', bounds)
+    })
+
+    services.on('resize', e => {
+
+        // Set project bounds for the services window
+        const bounds = settings.get('bounds') || {}
+        bounds.services = services.getBounds()
+        settings.set('bounds', bounds)
+    })
+
+    projects.on('move', e => {
+
+        // Set project bounds for the services window
+        const bounds = settings.get('bounds') || {}
+        bounds.projects = projects.getBounds()
+        settings.set('bounds', bounds)
+    })
+
+    projects.on('resize', e => {
+
+        const bounds = settings.get('bounds') || {}
+        bounds.projects = projects.getBounds()
+        settings.set('bounds', bounds)
     })
 
     // Wait for the contents to load, then load the projects
@@ -77,16 +122,16 @@ app.on('ready', () => {
 ipcMain.on('showExportersWindow', (e, project) => {
 
     // Reload the project from memory when re-opening the window
-    store.getProjectById(project.id).then(project => {
+    console.log(store.getProjectById(project))
+    services.webContents.send('setActiveProject', store.getProjectById(project))
+    services.show()
 
-        services.webContents.send('setActiveProject', project)
-        services.show()
-    })
-})
+    // Reload the project from memory when re-opening the window
+    // store.getProjectById(project.id).then(project => {
 
-ipcMain.on('project-ready', (e, project) => {
-
-    projects.webContents.send('project-ready', project)
+    //     services.webContents.send('setActiveProject', project)
+    //     services.show()
+    // })
 })
 
 ipcMain.on('create-compiler', (e, project) => {
@@ -123,13 +168,16 @@ ipcMain.on('unlink-project', (e, project) => {
 
     project.unlinked = true
 
-    store.setProjectById(project).then(() => {
+    store.setProjectById(project)
+    projects.webContents.send('reload-projects', store.getAllProjects())
 
-        store.getAllProjects().then(results => {
+    // store.setProjectById(project).then(() => {
 
-            projects.webContents.send('reload-projects', results)
-        })
-    })
+    //     store.getAllProjects().then(results => {
+
+    //         projects.webContents.send('reload-projects', results)
+    //     })
+    // })
 })
 
 ipcMain.on('startServer', (e, project) => {
@@ -139,13 +187,17 @@ ipcMain.on('startServer', (e, project) => {
 
 ipcMain.on('storePassword', (e, details) => {
 
-    keytar.replacePassword('statica', details.serviceId, details.password)
+    console.log('setting password', details.password)
+    keytar.setPassword('statica', details.serviceId, details.password)
 })
 
 ipcMain.on('retrievePassword', (e, serviceId) => {
 
-    const password = keytar.getPassword(`statica`, serviceId)
-    e.returnValue = password
+    keytar.getPassword(`statica`, serviceId).then(password => {
+        console.log('getting password', password)
+        e.returnValue = password
+    })
+
 })
 
 ipcMain.on('reloadActiveProject', e => {

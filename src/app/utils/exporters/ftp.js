@@ -1,6 +1,6 @@
 const notifier = require('node-notifier')
 const dir = require('node-dir')
-const path = require('path')
+const path = require('upath')
 
 let vue
 

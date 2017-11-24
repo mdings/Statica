@@ -1,14 +1,15 @@
 const path = require('upath')
 const fs = require('fs')
 const chokidar = require('chokidar')
-const extensions  = require('./extensions')
-const fileTypes  = require('require-dir')('./files')
+const extensions = require('./extensions')
+const fileTypes = require('require-dir')('./files')
 const ignored = require('./ignored')
 const electron = require('electron')
-const {app, BrowserWindow} = electron.remote
-const {ipcRenderer} = electron
+const { app, BrowserWindow } = electron.remote
+const { ipcRenderer } = electron
 const browsersync = require('browser-sync')
-const notifier = require('node-notifier')
+const utils = require('./utils')
+const { exec } = require('child_process')
 
 /**
  * Checks whether a folder or filename starts with an underscore
@@ -37,6 +38,7 @@ module.exports = class Compiler {
 
         this.watcher = chokidar.watch(project.path, {
 
+            usePolling: true,
             ignored: ignored(`${project.path}/build/**/*`)
         })
 
@@ -49,7 +51,6 @@ module.exports = class Compiler {
 
                 // @TODO: create a separate window to do an initial rendering of ALL the files?
                 this.ready = true
-                ipcRenderer.send('project-ready', project)
                 ipcRenderer.send('status-update', {
 
                     status: 'ready',
@@ -59,14 +60,14 @@ module.exports = class Compiler {
     }
 
     /**
-     * Creates a new file class, adds it to the files array and renders the file immediately
+     * Creates a new file class, adds it to the files array and renders the file immediately. Only takes in files that are so-called 'masters'
      * @constructor
      * @param {string} filename - The name of the file
      */
 
     add(filename) {
 
-        if(!hasUnderscore(filename)) {
+        if (!hasUnderscore(filename)) {
 
             const ext = path.extname(filename).toLowerCase()
             const type = extensions[ext] || 'other'
@@ -76,38 +77,11 @@ module.exports = class Compiler {
             // Add the file to the existing array
             this.files.push(file)
 
-            // Consolidate file errors to be able to pass them to the application
-            file.on('error', (message, line, filename) => {
-
-                notifier.notify({
-
-                    title: `Failed to compile ${project.name}`,
-                    subtitle: `Error on line ${line} of ${filename.base}`,
-                    message: message,
-                    group: 'statica', // only display one notification per app
-                    sound: 'Purr',
-                    timeout: 10000,
-                });
-            })
-
-            file.on('notification', (warning, filename) => {
-
-                notifier.notify({
-
-                    title: `Warning for ${project.name}`,
-                    subtitle: `${filename.base}`,
-                    message: warning,
-                    group: 'statica', // only display one notification per app
-                    sound: 'Purr',
-                    timeout: 10000,
-                });
-            })
-
             if (this.ready) {
 
                 // @TODO: there are no visual updates for this atm. See how we can improve?
                 // Immediately render the files when added..
-                file.render()
+                file.render().catch(err => { })
             }
         }
     }
@@ -118,7 +92,10 @@ module.exports = class Compiler {
     async optimize() {
 
         const renderFiles = this.files.map(file => file.render(true))
-        await Promise.all(renderFiles)
+        await Promise.all(renderFiles).catch(err => {
+
+            // Fail silently
+        })
     }
 
     /**
@@ -157,17 +134,42 @@ module.exports = class Compiler {
         if (!this.ready) return
 
         let filesToRender
+        const parseFile = path.parse(filename)
 
-        // We're triggering a change to a partial here, so we should render all masters for that file
-        if (hasUnderscore(filename)) {
+        // First see if we're changing a layout file. If so, then render all markdown files for that directory
+        if (parseFile.name == '_layout') {
+
+            filesToRender = this.files.filter(file => {
+
+                return path.parse(file.filename).ext == '.md'
+                    && file.filename.startsWith(parseFile.dir)
+            })
+
+            // If not, then check if we need to render other 'master' files which are no layout files
+        } else if (hasUnderscore(filename)) {
 
             const ext = path.parse(filename).ext
 
             filesToRender = this.files.filter(file => {
 
-                return path.parse(file.filename).ext == ext
+                // When we are compiling Vue, we only want to trigger master files that have the extension .js, otherwise also .ts and .coffee will recompile. Savvy?
+                if (parseFile.ext == '.vue') {
+
+                    // javascript == javascript
+                    return extensions[ext].toLowerCase() == file.constructor.name.toLowerCase()
+                        && path.parse(file.filename).ext == '.js'
+                        && parseFile.name != '_layout'
+
+                } else {
+
+                    // .less == .less
+                    return parseFile.ext == path.parse(file.filename).ext
+                        && parseFile.name != '_layout'
+                }
             })
 
+
+            // Otherwise render the file, typically only one
         } else {
 
             filesToRender = this.files.filter(file => {
@@ -185,10 +187,40 @@ module.exports = class Compiler {
                 project: this.project
             })
 
-            filesToRender = filesToRender.map(file => file.render(true))
+            filesToRender = filesToRender.map(file => file.render())
 
-            Promise.all(filesToRender).then(() => {
+            Promise
+            .all(filesToRender)
+            .then(() => {
 
+                ipcRenderer.send('status-update', {
+
+                    status: 'success',
+                    project: this.project
+                })
+            }, err => {
+
+                console.log('from statica.js', err)
+
+                try {
+
+                    const { message, line, filename } = err
+                    const subtitle = line
+                        ? `Error on line ${line} of ${path.parse(filename).base}`
+                        : `Error in ${path.parse(filename).base}`
+
+                    utils.notify(
+                        `Failed to compile ${this.project.name}`,
+                        subtitle,
+                        message
+                    )
+
+                } catch (err) {
+
+                    console.log(err)
+                }
+
+                // @todo: should be error
                 ipcRenderer.send('status-update', {
 
                     status: 'success',
@@ -200,12 +232,18 @@ module.exports = class Compiler {
 
     launch() {
 
-        browsersync.create().init({
+        const bs = browsersync.create()
+
+        bs.init({
             ui: false,
             notify: false,
+            logLevel: 'silent',
+            ghostMode: false,
+            cors: true,
+            minify: false,
             server: `${this.project.path}/build/`,
             files: `${this.project.path}/build/**/*`
-        });
+        })
     }
 
     destroy() {

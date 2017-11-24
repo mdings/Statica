@@ -1,5 +1,6 @@
-var path = require('path')
-var webpack = require('webpack')
+const path = require('upath')
+const webpack = require('webpack')
+const UglifyJSPlugin = require('uglifyjs-webpack-plugin')
 
 module.exports = {
   entry: {
@@ -15,6 +16,7 @@ module.exports = {
     __filename: true
   },
   target: 'electron',
+  externals: [{ 'electron-store': 'require("electron-store")' }],
   module: {
     rules: [
       {
@@ -33,8 +35,9 @@ module.exports = {
 			        loader: 'svg-url-loader',
 			        options: {}
 			    }
-			},{ test: /\.scss$/, loader: 'style-loader!css-loader!sass-loader' }
-
+			},{
+        test: /\.scss$/,
+        use: ['sass-loader'] }
     ]
   },
   resolve: {
@@ -51,11 +54,7 @@ if (process.env.NODE_ENV === 'production') {
                 NODE_ENV: '"production"'
             }
         }),
-        new webpack.optimize.UglifyJsPlugin({
-            compress: {
-                warnings: false
-            }
-        })
+        new UglifyJSPlugin()
     ]
 } else {
     module.exports.devtool = '#source-map'

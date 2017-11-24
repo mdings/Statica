@@ -23,18 +23,12 @@ module.exports = class Stylesheet extends File {
                 file: this.filename,
                 options : {
 
-                    includePaths: [this.project]
+                    includePaths: [this.project.path]
                 }
 
             }, (err, result) => {
 
-                if (err) {
-
-                    const message = err.message
-                    const line = err.line
-                    return reject({message, line})
-                }
-
+                if (err) return reject(err)
                 resolve(result.css.toString('utf8'))
             })
         })
@@ -54,7 +48,10 @@ module.exports = class Stylesheet extends File {
                     const split = err.message.split(/\r?\n/)
                     const line = err.message.match(/\d+/) //gets the first digit which is line
                     const message = `${split.slice(-2, -1)}`
-                    return reject({message, line})
+
+                    err.message = message
+                    err.line = line
+                    reject(err)
                 }
 
                 resolve(output)
@@ -73,22 +70,13 @@ module.exports = class Stylesheet extends File {
                 filename: this.filename
             }, (err, output) => {
 
-                if (err) {
-
-                    const message = err.message
-                    const line = err.line
-                    return reject({message, line})
-                }
-
+                if (err) reject(err)
                 resolve(output.css)
             })
         })
     }
 
-    async render(isProduction = false) {
-
-        // Set the production flag
-        this.isProduction = isProduction
+    async render() {
 
         let toRender
 
@@ -108,40 +96,24 @@ module.exports = class Stylesheet extends File {
         }
 
         // If the file is regular css don't run it through a preprocessor, otherwise run the preprocessor as specified
-        if (this.isCss) {
-
-            try {
+        try {
+            if (this.isCss) {
 
                 const stream = this.read()
                 const data = await this.process(stream)
                 await this.write(data)
 
-            } catch (e) {
-
-                // Only display errors when we're not optimizing
-                if (!this.isProduction) {
-
-                    this.emit('error', e.reason, e.line, path.parse(this.filename))
-                }
-            }
-
-        } else {
-
-            try {
+            } else {
 
                 let data
                 data = await this[toRender].call(this)
                 data = await this.process(data)
                 await this.write(data)
-
-            } catch (e) {
-
-                // Only display errors when we're not optimizing
-                if (!this.isProduction) {
-
-                    this.emit('error', e.message, e.line, path.parse(this.filename))
-                }
             }
+
+        } catch (err) {
+
+            throw this.error(err)
         }
     }
 
@@ -177,6 +149,7 @@ module.exports = class Stylesheet extends File {
     get isStylus() {
 
         return path.parse(this.filename).ext == '.styl'
+            || path.parse(this.filename).ext == '.stylus'
     }
 
     get isCss() {

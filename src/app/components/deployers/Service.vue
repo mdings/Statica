@@ -1,6 +1,6 @@
 <template>
     <div @click="setActiveService(service)" class="service">
-        <span class="service-tyle">{{service.title}}</span>
+        <span class="service-title">{{service.title}}</span>
         <span class="service-type">{{service.type}}</span>
     </div>
 </template>
@@ -21,26 +21,12 @@
     }
 </script>
 
-<style lang="sass" scoped>
+<style lang="scss" scoped>
 
-    @keyframes spin {
-        100% {
-            transform:rotate(360deg);
-        }
-    }
+    @import "../../sass/components/service";
 
     .service {
 
-        &.active {
-
-            background-color: #E9F3FE;
-        }
+        @extend %service;
     }
-
-    .service-type {
-
-        justify-content: space-between;
-        display: flex;
-    }
-
 </style>

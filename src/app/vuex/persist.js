@@ -1,84 +1,43 @@
-const storage = require('electron-json-storage')
-
+const omit = require('omit-deep')
+const Store = require('electron-store')
+const store = new Store()
 
 const clearAllProjects = () => {
 
-    return storage.clear(e => {
-
-        if (e) throw e
-    })
+    store.delete('projects')
 }
 
 const getAllProjects = () => {
 
-    return new Promise((resolve, reject) => {
-
-        storage.get('projects', (e, result) => {
-
-            if (e) reject(e)
-
-            resolve(result)
-        })
-    })
+    return store.get('projects') || []
 }
 
 const setAllProjects = (projects) => {
 
-    return new Promise((resolve, reject) => {
-
-        storage.set('projects', projects, (e) => {
-
-            if (e) {
-
-                reject(e)
-
-            } else {
-
-                resolve()
-            }
-        })
-    })
+    store.set('projects', omit(projects, ['password']))
 }
 
-const getProjectById = (id) => {
+const getProjectById = (project) => {
 
-    return new Promise((resolve, reject) => {
-
-        getAllProjects()
-        .then(projects => {
-
-            const project = projects.find(p => {
-
-                return p.id == id
-            })
-
-            resolve(project)
-        })
-    })
+    return store.get('projects').find(p => p.id == project.id)
 }
 
 const setProjectById = (project) => {
 
-    return new Promise((resolve, reject) => {
+    let projects = store.get('projects')
+    projects = projects.map(current => {
 
-        getAllProjects()
-        .then(projects => {
+        if (current.id == project.id) {
 
-            for (var i in projects) {
+            return project
 
-                if (projects[i].id == project.id) {
+        } else {
 
-                    projects[i] = project
-                    break
-                }
-            }
-
-            setAllProjects(projects).then(() => {
-
-                resolve()
-            })
-        })
+            return current
+        }
     })
+
+    store.set('projects', projects)
 }
 
 module.exports = {

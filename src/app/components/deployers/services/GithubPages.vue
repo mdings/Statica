@@ -28,7 +28,7 @@
             @keyup="checkValidity">
 
         <label>Password</label>
-        <input
+        <input required
             type="password"
             name="password"
             v-model="obj.password"

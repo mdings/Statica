@@ -1,11 +1,11 @@
 <template>
-    <section id="projects" v-bind:class="{ empty: !projects.length }">
-        <div class="projects__divider" v-show="favProjects.length" data-sticky-container>
+    <section class="body"  v-bind:class="{ empty: !projects.length }">
+        <div class="divider" v-show="favProjects.length" data-sticky-container>
             <span class="sticky">Favourites</span>
             <Project v-for="project in favProjects" :key="project.id" :project="project"></Project>
         </div>
 
-        <div class="projects__divider" data-sticky-container>
+        <div class="divider" data-sticky-container>
             <span class="sticky" v-show="otherProjects.length && favProjects.length">Others</span>
             <Project v-for="project in otherProjects" :key="project.id" :project="project"></Project>
         </div>
@@ -150,3 +150,11 @@
         }
     }
 </script>
+<style lang="scss">
+    @import "../../sass/components/body";
+
+    .body {
+
+        @extend %body;
+    }
+</style>

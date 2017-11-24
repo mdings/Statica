@@ -14,7 +14,7 @@ const notify = (title, message, vm) => {
 
 const githubpages = (project, service, pass, vm) => {
 
-    const branch = service.branch.length ? service.branch : 'gh-pages'
+    const branch = service.branch && service.branch.length ? service.branch : 'gh-pages'
 
     vm.$root.$emit('activityLogger', `Deploying to github repo..`)
 

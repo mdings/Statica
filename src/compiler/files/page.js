@@ -1,11 +1,39 @@
 'use strict'
 
 const fs = require('fs')
-const path = require('path')
+const path = require('upath')
 const pug = require('pug')
-const mm = require('marky-mark')
+const ejs = require('ejs')
+const matter = require('gray-matter')
+const md = require('markdown-it')({html: true})
 const findUp = require('find-up')
 const File = require('../file')
+
+const isDirectory = source => {
+
+    return fs.lstatSync(source).isDirectory()
+}
+
+const getDirectories = source => {
+
+    return fs.readdirSync(source)
+        .map(name => path.join(source, name))
+        .filter(isDirectory)
+}
+
+const findClosestLayout = (filename, files) => {
+
+    return new Promise((resolve, reject) => {
+
+        findUp(files, {
+
+            cwd: path.dirname(filename)
+        }).then(filepath => {
+
+            resolve(filepath)
+        })
+    })
+}
 
 module.exports = class Page extends File {
 
@@ -14,57 +42,129 @@ module.exports = class Page extends File {
         super(filename, project)
     }
 
-    //@TODO: Look into node streams (.pipe())
+    async markdown() {
 
-    async render(resolve, reject) {
+        try {
 
-        const sourcePath = this.filename
+            // Finds the closest layout file to the currently parsed markdown file
+            const layoutFile = await findClosestLayout(this.filename, [
+                '_layout.pug',
+                '_layout.jade',
+                '_layout.html',
+                '_layout.htm',
+                '_layout.ejs'
+            ])
 
-        if (this.isMarkDown) {
+            // Define data object and get the frontmatter
+            const data = await this.getFrontMater(this.filename)
+            // Rename the data object to meta
+            data.meta = data.data
+            data.content = md.render(data.content)
 
-            // Find the closest layout file
-            findUp(['_layout.pug'], {
-                cwd: this.fileInfo.sourceDir
-            })
-            .then(filepath => {
-                if (filepath) {
-                    const data = mm.parseFileSync(sourcePath)
-                    const output = this.puggify(filepath, data)
-                    this.write(output, resolve)
+            if (layoutFile) {
+
+                // Wrap the data in a layout file if found
+                const ext = path.extname(layoutFile)
+
+                if (ext == '.pug'
+                    || ext == '.jade') {
+
+                    return await this.pug(layoutFile, data)
+
                 } else {
-                    reject('No layout file found')
+
+                    return await this.ejs(layoutFile, data)
                 }
-            })
 
-        } else if (this.isPug) {
+            }  else {
 
-            const output = this.puggify(sourcePath, data)
-            this.write(output, resolve)
+                return data
+            }
 
-        } else if (this.isHTML) {
+        } catch (err) {
 
-            const input = this.read()
-
-            // Enable partials for regular HTML-files
-            const output = input.replace(/\<\!-- @include (.*) --\>/g, (match, file) => {
-
-                return fs.readFileSync(`${this.project}/${file}`);
-            })
-
-            // Writeout
-            this.write(output, resolve)
-
-        } else {
-            // Just copy the file when it's other than Pug
-            this.read()
-            this.write(this.input, resolve)
+            return Promise.reject(err)
         }
     }
 
-    puggify(file, data) {
+    pug(filename, data) {
 
-        const compiled = pug.compileFile(file)
-        return compiled(data)
+        return new Promise((resolve, reject) => {
+
+            const compiled = pug.compileFile(filename)
+            resolve(compiled(data))
+        })
+    }
+
+    ejs(filename, data) {
+
+        return new Promise((resolve, reject) => {
+
+            ejs.renderFile(filename, data, {}, (err, result) => {
+
+                if (err) reject(err)
+                resolve(result)
+            })
+        })
+    }
+
+    async render(resolve, reject) {
+
+        if (this.isMarkDown) {
+
+            try {
+
+                const output = await this.markdown()
+                await this.write(output)
+
+            } catch (err) {
+
+                // this.emit('error', err.message, 'something went wrong', path.parse(this.filename))
+                return Promise.reject(err.message, this.filename)
+            }
+
+        } else if (this.isPug) {
+
+            try {
+
+                const output = await this.pug(this.filename, data)
+                await this.write(output)
+
+            } catch (err) {
+
+                return Promise.reject(err.message, this.filename)
+            }
+
+        } else if (this.isHTML) {
+
+            try {
+
+                const input = this.read()
+
+                // Enable partials for regular HTML-files
+                const output = input.replace(/\<\!-- @include (.*) --\>/g, (match, file) => {
+
+                    return fs.readFileSync(`${this.project.path}/${file}`);
+                })
+
+                // Writeout
+                await this.write(output)
+
+            } catch (err) {
+
+                // this.emit('error', err.message, 'nee', path.parse(this.filename))
+                return Promise.reject(err.message, this.filename)
+                // return Promise.reject()
+            }
+        }
+    }
+
+    getFrontMater(file) {
+
+        return new Promise((resolve, reject) => {
+
+            resolve(matter.read(file))
+        })
     }
 
     get exportExtension() {

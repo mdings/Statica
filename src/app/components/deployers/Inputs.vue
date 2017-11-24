@@ -1,5 +1,7 @@
 <template>
-    <div id="inputs">
+    <div class="slidepanel"
+        :class="{'visible': isFormOpen}"
+        data-form>
 
         <div v-if="action == 'add'">
             <label>Choose a service</label>
@@ -24,7 +26,6 @@
 <script>
 
     const {ipcRenderer} = require('electron')
-    const ftp = require('ftp-deploy')
     const remote = require('electron').remote
 
     import FTP from './services/FTP.vue'
@@ -36,8 +37,6 @@
             FTP,
             GithubPages
         },
-
-        props: ['action'],
 
         data() {
 
@@ -71,6 +70,16 @@
             services() {
 
                 return this.$store.getters.services
+            },
+
+            isFormOpen() {
+
+                return this.$store.getters.isFormOpen
+            },
+
+            action() {
+
+                return this.$store.getters.action
             }
         },
 
@@ -84,8 +93,6 @@
 
             add(data) {
 
-                console.log(data)
-
                 const id = require('shortid').generate()
 
                 let exporter = {
@@ -94,48 +101,24 @@
                     id: id
                 }
 
-                // Store password fields safely with keytar
-                if (data.password) {
-
-                    ipcRenderer.send('storePassword', {
-
-                        // projectId: this.project,
-                        serviceId: id,
-                        password: data.password
-                    })
-
-                    // remove the password field from the obj
-                    delete data.password
-                }
-
                 Object.assign(exporter, data)
                 this.$store.dispatch('addService', exporter)
             },
 
             edit(data) {
 
-                // Store password fields safely with keytar
-                if (data.password) {
-
-                    ipcRenderer.send('storePassword', {
-
-                        // projectId: this.project,
-                        serviceId: data.id,
-                        password: data.password
-                    })
-
-                    // remove the password field from the obj
-                    delete data.password
-                }
-
                 this.$store.dispatch('editService', data)
             },
 
             confirm() {
 
-                this.$root.$emit('closePanel')
+                this.$store.dispatch('hideForm')
                 this.$root.$emit('getFormData')
             }
         }
     }
 </script>
+
+<style lang="scss">
+    @import "../../sass/components/slidepanel";
+</style>
