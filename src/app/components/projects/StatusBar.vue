@@ -5,11 +5,8 @@
 </template>
 <script>
     export default {
-
         computed: {
-
             count() {
-
                 return this.$store.getters.projects.length
             }
         }

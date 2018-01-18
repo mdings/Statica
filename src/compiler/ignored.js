@@ -1,10 +1,8 @@
 const path = require('upath')
 const fs = require('fs')
 
-module.exports = function (targetDir){
-
+module.exports = targetDir => {
     const ignores = [
-
         targetDir,
         path.join(targetDir, '/**/*'),
         function(string) {
@@ -16,6 +14,5 @@ module.exports = function (targetDir){
         /bower_components/,
         /npm-debug\.log/,
     ]
-
     return ignores
 }

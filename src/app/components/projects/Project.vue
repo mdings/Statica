@@ -34,17 +34,13 @@
     const {Menu, MenuItem} = require('electron').remote
 
     export default {
-
         props: ['project'],
 
         created() {
-
             // This triggers a memory leak...
             // find out why and how to prevebt
             // ipcRenderer.on('status-update', this.updateStatus)
-
             const vm = this
-
             //@TODO: External template for this
             this.menu = new Menu()
 
@@ -54,14 +50,12 @@
                     vm.refreshProject()
                 }
             }))
-
             this.menu.append(new MenuItem({
                 label: 'Open page',
                 click() {
                     vm.startProject()
                 }
             }))
-
             this.menu.append(new MenuItem({
                 type: 'separator'
             }))
@@ -85,7 +79,6 @@
             }))
 
             this.$root.$on('app-click', () => {
-
                 if (this.isEditable) {
 
                     this.updateProjectName()
@@ -93,41 +86,30 @@
             })
 
             this.$nextTick(() => {
-
                 this.placeholder = this.project.name
             })
 
         },
 
         data() {
-
             return {
-
                 placeholder: '',
                 isEditable: false,
                 menu: null
             }
         },
 
-        mounted() {
-
-        },
-
         methods: {
-
             startProject() {
-
                 ipcRenderer.send('startServer', this.project.id)
             },
 
             toggleFav() {
-
                 this.$set(this.project, 'favourite', !this.project.favourite)
                 this.$root.$emit('update-project', this.project)
             },
 
             updateProjectName() {
-
                 // Remove whitespace from name (like enters)
                 this.project.name = this.placeholder.replace(/^\s+|\s+$/g, '')
                 console.log(this.project.name)
@@ -136,36 +118,28 @@
             },
 
             preventEnter(e) {
-
                 if (e.keyCode == 13) {
-
                     this.updateProjectName()
                     e.preventDefault()
                 }
             },
 
             changeName(e) {
-
                 this.placeholder = e.target.textContent
             },
 
             refreshProject() {
-
                 console.log('i could refresh')
             },
 
             removeProject() {
-
                 this.$root.$emit('remove-project', this.project)
             },
 
             renameProject(e) {
-
                 this.isEditable = true
-
                 // highlight the content by default
                 requestAnimationFrame(() => {
-
                     const range = document.createRange();
                     range.selectNodeContents(e.target);
                     var sel = window.getSelection();
@@ -176,14 +150,11 @@
             },
 
             openOptions() {
-
                 this.menu.popup(require('electron').remote.getCurrentWindow())
             },
 
             updateStatus(e, data) {
-
                 if (data.project.id == this.project.id) {
-
                     this.status = data.status
                 }
             },

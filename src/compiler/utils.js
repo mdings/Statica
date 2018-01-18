@@ -8,13 +8,9 @@ const notifier = new NotificationCenter({
 })
 
 module.exports = {
-
     notify(title, subtitle, message) {
-
         console.log(`${app.getAppPath()}/Statica`)
-
         notifier.notify({
-
             title,
             subtitle,
             message,
@@ -30,7 +26,6 @@ module.exports = {
     - Could not resolve ../module from ../../app.vue
     */
     findRelativePath(message) {
-
         const relativeFilename = /(?:(from|by)\s)(\.\.\/+[a-zA-z/._0-9]*)/gi.exec(message)
         return (relativeFilename && relativeFilename[0]) ? relativeFilename[0] : null
     }

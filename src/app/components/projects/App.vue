@@ -25,14 +25,12 @@
     export default {
 
         components: {
-
             Titlebar,
             Projects,
             StatusBar
         },
 
         created() {
-
             // ipcRenderer.on('notify', (e, message) => {
 
             //     let myNotification = new Notification('Title', {
@@ -54,39 +52,31 @@
         },
 
         methods: {
-
             handleDragEnter() {
-
                 isDragging = true
                 this.$el.classList.add('has-drop-area')
             },
 
             handleDragOver(e) {
-
                 e.preventDefault()
                 e.dataTransfer.dropEffect = 'move'
                 return false
             },
 
             handleDrop() {
-
                 this.$el.classList.remove('has-drop-area')
                 isDragging = false
             },
 
             handleDragLeave(e) {
-
                 if (!isDragging) {
-
                     this.$el.classList.remove('has-drop-area')
                     return
                 }
-
                 isDragging = false
             },
 
             sendClickEvent() {
-
                 this.$root.$emit('app-click')
             }
         }
@@ -98,7 +88,6 @@
     *,
     *:before,
     *:after {
-
         margin: 0;
         padding: 0;
         outline: none;
@@ -108,7 +97,6 @@
     }
 
     .window {
-
         @extend %window;
     }
 </style>

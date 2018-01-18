@@ -12,19 +12,14 @@
     import TrafficLights from '../shared/TrafficLights.vue'
 
     export default {
-
         components: {
-
             TrafficLights
         },
 
         methods: {
-
             openDialog() {
-
                 this.$root.$emit('open-dialog')
             }
-
         }
     }
 </script>

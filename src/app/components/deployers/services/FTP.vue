@@ -1,9 +1,8 @@
 <template id="ftp">
     <div>
-        <!-- <div v-if="obj.type">
-            <label>Service</label>
-            <span>{{obj.type}}</span>
-        </div> -->
+
+
+
 
         <label>Title</label>
         <input required

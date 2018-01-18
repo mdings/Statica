@@ -16,14 +16,9 @@ const { exec } = require('child_process')
  * @param {string} filename
  * @returns {boolean}
  */
-const hasUnderscore = (filename) => {
-
+const hasUnderscore = filename => {
     let parts = filename.split('/')
-    parts = parts.filter(part => {
-
-        return part.charAt(0) == '_'
-    })
-
+    parts = parts.filter(part => part.charAt(0) == '_')
     return parts.length > 0 ? true : false
 }
 
@@ -31,32 +26,28 @@ const hasUnderscore = (filename) => {
 module.exports = class Compiler {
 
     constructor(project) {
-
         this.project = project
         this.ready = false // we're ready when all files have been indexed
         this.files = []
 
         this.watcher = chokidar.watch(project.path, {
-
             usePolling: true,
             ignored: ignored(`${project.path}/build/**/*`)
         })
 
         this.watcher
-            .on('add', filename => this.add(path.normalize(filename)))
-            .on('unlink', filename => this.unlink(path.normalize(filename)))
-            .on('unlinkDir', dirname => this.unlinkDir(path.normalize(dirname)))
-            .on('change', filename => this.change(filename))
-            .on('ready', () => {
-
-                // @TODO: create a separate window to do an initial rendering of ALL the files?
-                this.ready = true
-                ipcRenderer.send('status-update', {
-
-                    status: 'ready',
-                    project
-                })
+        .on('add', filename => this.add(path.normalize(filename)))
+        .on('unlink', filename => this.unlink(path.normalize(filename)))
+        .on('unlinkDir', dirname => this.unlinkDir(path.normalize(dirname)))
+        .on('change', filename => this.change(filename))
+        .on('ready', () => {
+            // @TODO: create a separate window to do an initial rendering of ALL the files?
+            this.ready = true
+            ipcRenderer.send('status-update', {
+                status: 'ready',
+                project
             })
+        })
     }
 
     /**
@@ -66,19 +57,15 @@ module.exports = class Compiler {
      */
 
     add(filename) {
-
         if (!hasUnderscore(filename)) {
-
             const ext = path.extname(filename).toLowerCase()
             const type = extensions[ext] || 'other'
             const file = new fileTypes[type](filename, this.project)
             const project = this.project
-
             // Add the file to the existing array
             this.files.push(file)
 
             if (this.ready) {
-
                 // @TODO: there are no visual updates for this atm. See how we can improve?
                 // Immediately render the files when added..
                 file.render().catch(err => { })
@@ -90,10 +77,8 @@ module.exports = class Compiler {
      * Optimizes all the project files in the build folder
      */
     async optimize() {
-
         const renderFiles = this.files.map(file => file.render(true))
         await Promise.all(renderFiles).catch(err => {
-
             // Fail silently
         })
     }
@@ -105,15 +90,9 @@ module.exports = class Compiler {
      */
 
     unlink(filename) {
-
-        this.files = this.files.filter(file => {
-
-            return file.filename != filename
-        })
-
+        this.files = this.files.filter(file.filename != filename)
         console.log('ckokidar: remove')
         console.log(this.files)
-
     }
 
     /**
@@ -122,15 +101,12 @@ module.exports = class Compiler {
      */
 
     unlinkDir(dirname) {
-
         if (!fs.existsSync(this.project.path)) {
-
             ipcRenderer.send('unlink-project', this.project)
         }
     }
 
     change(filename) {
-
         if (!this.ready) return
 
         let filesToRender
@@ -138,51 +114,35 @@ module.exports = class Compiler {
 
         // First see if we're changing a layout file. If so, then render all markdown files for that directory
         if (parseFile.name == '_layout') {
-
             filesToRender = this.files.filter(file => {
-
                 return path.parse(file.filename).ext == '.md'
                     && file.filename.startsWith(parseFile.dir)
             })
 
             // If not, then check if we need to render other 'master' files which are no layout files
         } else if (hasUnderscore(filename)) {
-
             const ext = path.parse(filename).ext
-
             filesToRender = this.files.filter(file => {
-
                 // When we are compiling Vue, we only want to trigger master files that have the extension .js, otherwise also .ts and .coffee will recompile. Savvy?
                 if (parseFile.ext == '.vue') {
-
                     // javascript == javascript
                     return extensions[ext].toLowerCase() == file.constructor.name.toLowerCase()
                         && path.parse(file.filename).ext == '.js'
                         && parseFile.name != '_layout'
-
                 } else {
-
                     // .less == .less
                     return parseFile.ext == path.parse(file.filename).ext
                         && parseFile.name != '_layout'
                 }
             })
-
-
             // Otherwise render the file, typically only one
         } else {
-
-            filesToRender = this.files.filter(file => {
-
-                return file.filename == filename
-            })
+            filesToRender = this.files.filter(ffile.filename == filename)
         }
 
         if (filesToRender.length) {
-
             // Notify the UI of a project being processed
             ipcRenderer.send('status-update', {
-
                 status: 'processing',
                 project: this.project
             })
@@ -192,18 +152,13 @@ module.exports = class Compiler {
             Promise
             .all(filesToRender)
             .then(() => {
-
                 ipcRenderer.send('status-update', {
-
                     status: 'success',
                     project: this.project
                 })
             }, err => {
-
                 console.log('from statica.js', err)
-
                 try {
-
                     const { message, line, filename } = err
                     const subtitle = line
                         ? `Error on line ${line} of ${path.parse(filename).base}`
@@ -214,15 +169,12 @@ module.exports = class Compiler {
                         subtitle,
                         message
                     )
-
                 } catch (err) {
-
                     console.log(err)
                 }
 
                 // @todo: should be error
                 ipcRenderer.send('status-update', {
-
                     status: 'success',
                     project: this.project
                 })
@@ -231,7 +183,6 @@ module.exports = class Compiler {
     }
 
     launch() {
-
         const bs = browsersync.create()
 
         bs.init({
@@ -247,7 +198,6 @@ module.exports = class Compiler {
     }
 
     destroy() {
-
         this.watcher.close()
         delete this
     }

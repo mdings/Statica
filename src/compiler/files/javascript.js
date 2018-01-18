@@ -21,7 +21,6 @@ const uglifyjs = require('uglify-js');
 let cache
 
 const babelConfig = {
-
     compact: true,
     presets: [
         [`${app.getAppPath()}/node_modules/babel-preset-env`, {
@@ -36,20 +35,16 @@ const babelConfig = {
 module.exports = class Javascript extends File {
 
     constructor(filename, project) {
-
         super(filename, project)
     }
 
     coffeeify(options) {
-
         return this.isCoffee ? [coffee()] : []
     }
 
     vueify() {
-
         // something like main.vue.js, app.vue.coffee etc..
         if (/.*vue\.(js|coffee|ts)/i.test(this.filename)) {
-
             return [
                 alias({
                     vue: `${this.project.path}/node_modules/vue/dist/vue.esm.js`
@@ -57,22 +52,16 @@ module.exports = class Javascript extends File {
                 vue({
                     autoStyles: false,
                     compileTemplate: true,
-                    css(style, styles, compiler) {
-
-                    }
-                }
-                )]
-
+                    css(style, styles, compiler) {}
+                })
+            ]
         } else {
-
             return []
         }
     }
 
     rollup() {
-
         const file = this
-
         let plugins = [
             babel(babelrc.default({
                 addExternalHelpersPlugin: false,
@@ -97,16 +86,12 @@ module.exports = class Javascript extends File {
             sourceMap: true,
             plugins: plugins,
             onwarn: warning => {
-
                 // This is triggered when a global dependeny is not resolved, like jQuery or underscore, typically something like const $ = require('jQuery')
                 if (warning.code == 'UNRESOLVED_IMPORT') {
-
                     let message = warning.message
                     let subtitle = ''
                     const relativeFile = utils.findRelativePath(message)
-
                     if (relativeFile) {
-
                         message = message.replace(relativeFile, path.parse(relativeFile).base)
                         subtitle = `Error in ${path.parse(relativeFile).base}`
                     }
@@ -122,9 +107,7 @@ module.exports = class Javascript extends File {
     }
 
     generate(data) {
-
         return data.generate({
-
             // output format - 'amd', 'cjs', 'es', 'iife', 'umd'
             format: 'umd',
             moduleName: 'Statica',
@@ -132,48 +115,36 @@ module.exports = class Javascript extends File {
     }
 
     optimize(code) {
-
         return new Promise((resolve, reject) => {
-
             const optimized = uglifyjs.minify(code, {
                 warnings: true
             })
-
             if (optimized.error) {
-
                 return reject({
                     message: optimized.error
                 })
             }
-
             resolve(optimized)
         })
     }
 
     async render(isProduction = false) {
-
         try {
-
             const data = await this.rollup()
             cache = data
             const bundle = await this.generate(data)
 
             if (isProduction === true) {
-
                 const optimized = await this.optimize(bundle.code)
                 await this.write(optimized.code)
 
             } else {
-
                 await this.write(bundle.code)
             }
 
         } catch (err) {
-
             const message = err.message.replace(`${this.filename}:`, '')
-
             if (err.code == 'PLUGIN_ERROR') {
-
                 // strip the filename and linenumbers from the message
                 // @TODO: regex
                 err.message =
@@ -185,26 +156,21 @@ module.exports = class Javascript extends File {
 
             // This is triggered when a local/relative dependeny is not resolved. Typically something like const $ = require('../test/test')
             } else if (err.code == 'UNRESOLVED_IMPORT') {
-
                 const relativeFilename = utils.findRelativePath(err.message)
                 if (relativeFilename ) {
-
                     err.message = err.message.replace(relativeFilename, '')
                     err.filename = path.parse(relativeFilename).base
                 }
             }
-
             throw this.error(err)
         }
     }
 
     get isCoffee() {
-
         return path.parse(this.filename).ext == '.coffee'
     }
 
     get isVue() {
-
         return path.parse(this.filename).ext == '.vue'
     }
 

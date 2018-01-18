@@ -17,30 +17,23 @@
 </template>
 
 <script>
-
-    import Project from './Project.vue'
-
     const path = require('upath')
     const fs = require('fs')
     const persist = require('../../vuex/persist')
     const {dialog} = require('electron').remote
     const {ipcRenderer} = require('electron')
+    import Project from './Project.vue'
 
     export default {
-
         created() {
-
             // When the app is started, load in all the projects and send them to the main process to create a compiler for them. When the project is initialised the project can be unblocked
             this.$store.dispatch('getAllProjects')
 
             // drop functionality
             document.body.ondrop = (e) => {
-
-                [].forEach.call(e.dataTransfer.files, (file) => {
-
+                [].forEach.call(e.dataTransfer.files, file => {
                     this.addProject(file.path)
                 })
-
                 e.preventDefault()
             }
 
@@ -54,29 +47,22 @@
         },
 
         components: {
-
             Project
         },
 
         computed: {
-
             projects() {
-
                 return this.$store.getters.projects
             },
 
             favProjects() {
-
                 return this.projects.filter(project => {
-
                     return project.favourite
                 })
             },
 
             otherProjects() {
-
                 return this.projects.filter(project => {
-
                     return !project.favourite
                 })
             }
@@ -84,29 +70,15 @@
 
         methods: {
 
-            clearStorage() {
-
-                // storage.clear((e) => {
-
-                //     if (e) throw e
-
-                //     this.projects = []
-                // })
-            },
-
             reloadProjects(e, projects) {
-
                 this.projects = projects
             },
 
             addProject(folder, name) {
-
                 // check if the added path is actually a directory
                 // @TODO: fail gracefully
                 if (fs.lstatSync(folder).isDirectory()) {
-
                     const project = {
-
                         id: require('shortid').generate(),
                         name: path.basename(folder),
                         blocked: true,
@@ -122,27 +94,20 @@
             },
 
             updateProject() {
-
                 this.$store.dispatch('saveProjects', this.projects)
             },
 
             removeProject(project) {
-
                 this.$store.dispatch('removeProject', project)
             },
 
             openDialog() {
 
                 const bWin = require('electron').remote.getCurrentWindow()
-
                 dialog.showOpenDialog(bWin, {
-
                     properties: ['openDirectory'],
-
                 }, (filePaths) => {
-
                     if (filePaths) {
-
                         this.addProject(filePaths[0])
                     }
                 })

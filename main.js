@@ -1,5 +1,5 @@
 const electron = require('electron')
-const {ipcMain, app, BrowserWindow, Tray} = require('electron')
+const { ipcMain, app, BrowserWindow, Tray } = require('electron')
 
 const fs = require('fs')
 const path = require('upath')
@@ -9,24 +9,25 @@ const keytar = require('keytar')
 const parse = require('parse-git-config')
 const settings = require('electron-settings')
 
-console.log(keytar)
-const windows = require('./windows')
+const bw = {}
 
-let services
-let worker
-let projects
-
-if (process.env.NODE_ENV === 'development') {
-
-    // require('electron-reload')(`${__dirname}/dist/`)
+const updateBounds = windowName => {
+    const bounds = settings.get('bounds') || {}
+    bounds[windowName] = bw[windowName].getBounds()
+    settings.set('bounds', bounds)
 }
 
-// Don't show the app in the doc, we have doc
-// app.dock.hide()
+app.on('ready', () => {
+    bw.projects = new BrowserWindow({
+        maximizable: false,
+        width: 320,
+        height: 500,
+        frame: false,
+        titleBarStyle: 'hiddenInset',
+        show: true,
+    })
 
-const kickoff = () => {
-
-    services = windows.create('services', {
+    bw.deployers = new BrowserWindow({
         width: 500,
         height: 500,
         minimizable: false,
@@ -37,176 +38,115 @@ const kickoff = () => {
         show: false
     })
 
-    if (settings.has('bounds.services')) {
-
-        services.setBounds(settings.get('bounds.services'))
-    }
-
-    worker = windows.create('worker', {
+    bw.worker = new BrowserWindow({
         width: 300,
         height: 300,
-        show: true
+        show: false
     })
 
-    worker.webContents.openDevTools()
+    bw.projects.loadURL(`file://${__dirname}/projects.html`)
+    bw.deployers.loadURL(`file://${__dirname}/services.html`)
+    bw.worker.loadURL(`file://${__dirname}/worker.html`)
 
-    projects = windows.create('projects', {
-        maximizable: false,
-        width: 320,
-        height: 500,
-        frame: false,
-        titleBarStyle: 'hiddenInset',
-        show: true,
-    })
-
+    // Restore the original window positions for the projects and exports windows
     if (settings.has('bounds.projects')) {
-
-        projects.setBounds(settings.get('bounds.projects'))
+        bw.projects.setBounds(settings.get('bounds.projects'))
     }
-}
 
-const listen = () => {
+    if (settings.has('bounds.deployers')) {
+        bw.deployers.setBounds(settings.get('bounds.deployers'))
+    }
 
-    services.on('close', e => {
-
-        services.webContents.send('emptyServices')
-        services.hide()
-        e.preventDefault()
+    // Listen to events on the windows
+    bw.projects.on('close', e => {
+        if (bw.projects) {
+            bw.projects.hide()
+            e.preventDefault()
+        }
     })
 
-    services.on('move', e => {
-
-        // Set project bounds for the services window
-        const bounds = settings.get('bounds') || {}
-        bounds.services = services.getBounds()
-        settings.set('bounds', bounds)
+    bw.deployers.on('close', e => {
+        if (bw.deployers) {
+            bw.deployers.webContents.send('emptyServices')
+            bw.deployers.hide()
+            e.preventDefault()
+        }
     })
 
-    services.on('resize', e => {
-
-        // Set project bounds for the services window
-        const bounds = settings.get('bounds') || {}
-        bounds.services = services.getBounds()
-        settings.set('bounds', bounds)
-    })
-
-    projects.on('move', e => {
-
-        // Set project bounds for the services window
-        const bounds = settings.get('bounds') || {}
-        bounds.projects = projects.getBounds()
-        settings.set('bounds', bounds)
-    })
-
-    projects.on('resize', e => {
-
-        const bounds = settings.get('bounds') || {}
-        bounds.projects = projects.getBounds()
-        settings.set('bounds', bounds)
-    })
-
-    // Wait for the contents to load, then load the projects
-    projects.webContents.on('did-finish-load', () => {})
-}
-
-
-app.on('ready', () => {
-
-    kickoff()
-    listen()
+    bw.deployers.on('move', () => updateBounds('deployers'))
+    bw.deployers.on('resize', () => updateBounds('deployers'))
+    bw.projects.on('move', () => updateBounds('projects'))
+    bw.projects.on('resize', () => updateBounds('projects'))
 })
 
+app.on('activate', () => {
+    bw.projects.show()
+})
+
+app.on('before-quit', () => {
+    delete bw.projects
+    delete bw.deployers
+    delete bw.worker
+})
 
 // Communications!
 
 ipcMain.on('showExportersWindow', (e, project) => {
-
-    // Reload the project from memory when re-opening the window
-    console.log(store.getProjectById(project))
-    services.webContents.send('setActiveProject', store.getProjectById(project))
-    services.show()
-
-    // Reload the project from memory when re-opening the window
-    // store.getProjectById(project.id).then(project => {
-
-    //     services.webContents.send('setActiveProject', project)
-    //     services.show()
-    // })
+    bw.deployers.webContents.send('setActiveProject', store.getProjectById(project))
+    bw.deployers.show()
 })
 
 ipcMain.on('create-compiler', (e, project) => {
-
-    worker.webContents.send('create-compiler', project)
+    bw.worker.webContents.send('create-compiler', project)
 })
 
 ipcMain.on('remove-compiler', (e, project) => {
-
-    worker.webContents.send('remove-compiler', project.id)
+    bw.worker.webContents.send('remove-compiler', project.id)
 })
 
 ipcMain.on('optimize-project', (e, id) => {
-
-    worker.webContents.send('optimize-project', id)
+    bw.worker.webContents.send('optimize-project', id)
 })
 
 ipcMain.on('done-optimize-project', (e, project) => {
-
-    services.webContents.send('done-optimize-project', project)
+    bw.deployers.webContents.send('done-optimize-project', project)
 })
 
 ipcMain.on('project-error', (e, data) => {
-
-    projects.webContents.send('project-error', data)
+    bw.projects.webContents.send('project-error', data)
 })
 
 ipcMain.on('status-update', (e, data) => {
-
-    projects.webContents.send('status-update', data)
+    bw.projects.webContents.send('status-update', data)
 })
 
 ipcMain.on('unlink-project', (e, project) => {
-
     project.unlinked = true
-
     store.setProjectById(project)
-    projects.webContents.send('reload-projects', store.getAllProjects())
-
-    // store.setProjectById(project).then(() => {
-
-    //     store.getAllProjects().then(results => {
-
-    //         projects.webContents.send('reload-projects', results)
-    //     })
-    // })
+    bw.projects.webContents.send('reload-projects', store.getAllProjects())
 })
 
 ipcMain.on('startServer', (e, project) => {
-
-    worker.webContents.send('startServer', project)
+    bw.worker.webContents.send('startServer', project)
 })
 
 ipcMain.on('storePassword', (e, details) => {
-
     console.log('setting password', details.password)
     keytar.setPassword('statica', details.serviceId, details.password)
 })
 
 ipcMain.on('retrievePassword', (e, serviceId) => {
-
     keytar.getPassword(`statica`, serviceId).then(password => {
         console.log('getting password', password)
         e.returnValue = password
     })
-
 })
 
 ipcMain.on('reloadActiveProject', e => {
-
-    services.webContents.send('reloadActiveProject')
+    bw.deployers.webContents.send('reloadActiveProject')
 })
 
 ipcMain.on('set-service-status', (e, status, service, message = null) => {
-
     console.log('receiving set service status', status, service)
-    services.webContents.send('set-service-status', status, service)
+    bw.deployers.webContents.send('set-service-status', status, service)
 })
