@@ -1,7 +1,13 @@
 {
     "presets": [
-        ["es2015", {
-            "modules": false
-        }]
+        [
+            "env",
+            {
+                "modules": false // we set modules to false because rollup fucks up otherwise
+            }
+        ]
+    ],
+    "plugins": [
+        ["transform-react-jsx", { "pragma": "h" }]
     ]
 }
