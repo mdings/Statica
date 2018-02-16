@@ -43,7 +43,7 @@
             // @TODO: move these two to project component and handle the operations by the store. Also saves some communication
             this.$root.$on('remove-project', this.removeProject)
             this.$root.$on('update-project', this.updateProject)
-            ipcRenderer.on('reload-projects', this.reloadProjects)
+            ipcRenderer.on('reloadProjects', this.reloadProjects)
         },
 
         components: {
@@ -102,7 +102,6 @@
             },
 
             openDialog() {
-
                 const bWin = require('electron').remote.getCurrentWindow()
                 dialog.showOpenDialog(bWin, {
                     properties: ['openDirectory'],

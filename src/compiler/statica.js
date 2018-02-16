@@ -22,7 +22,6 @@ const hasUnderscore = filename => {
     return parts.length > 0 ? true : false
 }
 
-
 module.exports = class Compiler {
 
     constructor(project) {
@@ -31,10 +30,11 @@ module.exports = class Compiler {
         this.files = []
 
         this.watcher = chokidar.watch(project.path, {
-            usePolling: true,
+            usePolling: true, // better for window
             ignored: ignored(`${project.path}/build/**/*`)
         })
 
+        // This basically watches ALL the files within the folder (except for the ignored ones) but only has actions for some specifief filenames
         this.watcher
         .on('add', filename => this.add(path.normalize(filename)))
         .on('unlink', filename => this.unlink(path.normalize(filename)))
@@ -43,7 +43,7 @@ module.exports = class Compiler {
         .on('ready', () => {
             // @TODO: create a separate window to do an initial rendering of ALL the files?
             this.ready = true
-            ipcRenderer.send('status-update', {
+            ipcRenderer.send('statusUpdate', {
                 status: 'ready',
                 project
             })
@@ -59,16 +59,23 @@ module.exports = class Compiler {
     add(filename) {
         if (!hasUnderscore(filename)) {
             const ext = path.extname(filename).toLowerCase()
-            const type = extensions[ext] || 'other'
+            const type = extensions[ext]
+
+            console.log(filename, type)
             const file = new fileTypes[type](filename, this.project)
             const project = this.project
-            // Add the file to the existing array
+
             this.files.push(file)
 
+            // If the file is added after initial indexing, then immediately render it.
+            // If not, only copy the original images and other files
             if (this.ready) {
-                // @TODO: there are no visual updates for this atm. See how we can improve?
-                // Immediately render the files when added..
                 file.render().catch(err => { })
+            } else {
+                if (file.constructor.name == 'Other'
+                    || file.constructor.name == 'Image') {
+                    file.render(false) // don't optimize yet, only copy
+                }
             }
         }
     }
@@ -90,7 +97,7 @@ module.exports = class Compiler {
      */
 
     unlink(filename) {
-        this.files = this.files.filter(file.filename != filename)
+        this.files = this.files.filter(file => file.filename != filename)
         console.log('ckokidar: remove')
         console.log(this.files)
     }
@@ -101,8 +108,10 @@ module.exports = class Compiler {
      */
 
     unlinkDir(dirname) {
+        console.log(this.project.path)
         if (!fs.existsSync(this.project.path)) {
-            ipcRenderer.send('unlink-project', this.project)
+            ipcRenderer.send('unlinkProject', this.project)
+            console.log('unlinking dir')
         }
     }
 
@@ -137,12 +146,12 @@ module.exports = class Compiler {
             })
             // Otherwise render the file, typically only one
         } else {
-            filesToRender = this.files.filter(ffile.filename == filename)
+            filesToRender = this.files.filter(file => file.filename == filename)
         }
 
         if (filesToRender.length) {
             // Notify the UI of a project being processed
-            ipcRenderer.send('status-update', {
+            ipcRenderer.send('statusUpdate', {
                 status: 'processing',
                 project: this.project
             })
@@ -152,7 +161,7 @@ module.exports = class Compiler {
             Promise
             .all(filesToRender)
             .then(() => {
-                ipcRenderer.send('status-update', {
+                ipcRenderer.send('statusUpdate', {
                     status: 'success',
                     project: this.project
                 })
@@ -174,7 +183,7 @@ module.exports = class Compiler {
                 }
 
                 // @todo: should be error
-                ipcRenderer.send('status-update', {
+                ipcRenderer.send('statusUpdate', {
                     status: 'success',
                     project: this.project
                 })
@@ -184,7 +193,6 @@ module.exports = class Compiler {
 
     launch() {
         const bs = browsersync.create()
-
         bs.init({
             ui: false,
             notify: false,

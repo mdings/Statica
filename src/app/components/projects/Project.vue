@@ -39,7 +39,7 @@
         created() {
             // This triggers a memory leak...
             // find out why and how to prevebt
-            // ipcRenderer.on('status-update', this.updateStatus)
+            // ipcRenderer.on('statusUpdate', this.updateStatus)
             const vm = this
             //@TODO: External template for this
             this.menu = new Menu()

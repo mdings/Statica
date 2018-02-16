@@ -63,7 +63,7 @@
                 }
             })
 
-            ipcRenderer.on('done-optimize-project', (e, project) => {
+            ipcRenderer.on('doneOptimizeProject', (e, project) => {
 
                 console.log('start deploying', project)
                 const password = ipcRenderer.sendSync('retrievePassword', this.activeService.id)

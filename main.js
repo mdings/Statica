@@ -41,7 +41,7 @@ app.on('ready', () => {
     bw.worker = new BrowserWindow({
         width: 300,
         height: 300,
-        show: false
+        show: true
     })
 
     bw.projects.loadURL(`file://${__dirname}/projects.html`)
@@ -96,34 +96,34 @@ ipcMain.on('showExportersWindow', (e, project) => {
     bw.deployers.show()
 })
 
-ipcMain.on('create-compiler', (e, project) => {
-    bw.worker.webContents.send('create-compiler', project)
+ipcMain.on('createCompiler', (e, project) => {
+    bw.worker.webContents.send('createCompiler', project)
 })
 
-ipcMain.on('remove-compiler', (e, project) => {
-    bw.worker.webContents.send('remove-compiler', project.id)
+ipcMain.on('removeCompiler', (e, project) => {
+    bw.worker.webContents.send('removeCompiler', project.id)
 })
 
-ipcMain.on('optimize-project', (e, id) => {
-    bw.worker.webContents.send('optimize-project', id)
+ipcMain.on('optimizeProject', (e, id) => {
+    bw.worker.webContents.send('optimizeProject', id)
 })
 
-ipcMain.on('done-optimize-project', (e, project) => {
-    bw.deployers.webContents.send('done-optimize-project', project)
+ipcMain.on('doneOptimizeProject', (e, project) => {
+    bw.deployers.webContents.send('doneOptimizeProject', project)
 })
 
-ipcMain.on('project-error', (e, data) => {
-    bw.projects.webContents.send('project-error', data)
+ipcMain.on('projectError', (e, data) => {
+    bw.projects.webContents.send('projectError', data)
 })
 
-ipcMain.on('status-update', (e, data) => {
-    bw.projects.webContents.send('status-update', data)
+ipcMain.on('statusUpdate', (e, data) => {
+    bw.projects.webContents.send('statusUpdate', data)
 })
 
-ipcMain.on('unlink-project', (e, project) => {
+ipcMain.on('unlinkProject', (e, project) => {
     project.unlinked = true
     store.setProjectById(project)
-    bw.projects.webContents.send('reload-projects', store.getAllProjects())
+    bw.projects.webContents.send('reloadProjects', store.getAllProjects())
 })
 
 ipcMain.on('startServer', (e, project) => {
@@ -146,7 +146,7 @@ ipcMain.on('reloadActiveProject', e => {
     bw.deployers.webContents.send('reloadActiveProject')
 })
 
-ipcMain.on('set-service-status', (e, status, service, message = null) => {
+ipcMain.on('setServiceStatus', (e, status, service, message = null) => {
     console.log('receiving set service status', status, service)
-    bw.deployers.webContents.send('set-service-status', status, service)
+    bw.deployers.webContents.send('setServiceStatus', status, service)
 })

@@ -8,52 +8,37 @@ const fs = require('fs')
 
 const compilers = []
 
-ipcRenderer.on('optimize-project', (e, id) => {
-
+ipcRenderer.on('optimizeProject', (e, id) => {
     // find the project from the array
     const compiler = compilers.find(item => {
-
         return item.project.id == id
     })
 
     if (compiler) {
-
         compiler.optimize().then(() => {
-
-            ipcRenderer.send('done-optimize-project', compiler.project)
+            ipcRenderer.send('doneOptimizeProject', compiler.project)
         })
     }
 })
 
-ipcRenderer.on('create-compiler', (e, project) => {
-
+ipcRenderer.on('createCompiler', (e, project) => {
     compilers.push(new Statica(project))
 })
 
-ipcRenderer.on('remove-compiler', (e, id) => {
-
+ipcRenderer.on('removeCompiler', (e, id) => {
     // find the project from the array
-    const compiler = compilers.find(item => {
-
-      return item.project.id == id
-    })
+    const compiler = compilers.find(item => item.project.id == id)
 
     if (compiler) {
-
         compiler.destroy()
     }
 })
 
 ipcRenderer.on('startServer', (e, id) => {
-
     // find the project from the array
-    const compiler = compilers.find(item => {
-
-      return item.project.id == id
-    })
+    const compiler = compilers.find(item => item.project.id == id)
 
     if (compiler) {
-
         compiler.launch()
     }
 })
@@ -99,7 +84,7 @@ ipcRenderer.on('startServer', (e, id) => {
 
 //     console.log(projects)
 // }, 5000)
-// ipcRenderer.on('create-compiler', (e, project) => {
+// ipcRenderer.on('createCompiler', (e, project) => {
 
 //     projects.push({
 
@@ -110,7 +95,7 @@ ipcRenderer.on('startServer', (e, id) => {
 
 // })
 
-// ipcRenderer.on('remove-compiler', (e, id) => {
+// ipcRenderer.on('removeCompiler', (e, id) => {
 
 //     // find the project from the array
 //     const project = projects.find(item => {

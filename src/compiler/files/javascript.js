@@ -83,7 +83,6 @@ module.exports = class Javascript extends File {
         return rollup.rollup({
             entry: this.filename,
             cache: cache,
-            sourceMap: true,
             plugins: plugins,
             onwarn: warning => {
                 // This is triggered when a global dependeny is not resolved, like jQuery or underscore, typically something like const $ = require('jQuery')
@@ -137,7 +136,6 @@ module.exports = class Javascript extends File {
             if (isProduction === true) {
                 const optimized = await this.optimize(bundle.code)
                 await this.write(optimized.code)
-
             } else {
                 await this.write(bundle.code)
             }
@@ -153,7 +151,6 @@ module.exports = class Javascript extends File {
                         .replace(`(${err.loc.line}:${err.loc.column})`, '')
                 err.filename = err.id
                 err.line = err.loc.line
-
             // This is triggered when a local/relative dependeny is not resolved. Typically something like const $ = require('../test/test')
             } else if (err.code == 'UNRESOLVED_IMPORT') {
                 const relativeFilename = utils.findRelativePath(err.message)
@@ -175,7 +172,6 @@ module.exports = class Javascript extends File {
     }
 
     get exportExtension() {
-
         return '.js'
     }
 }

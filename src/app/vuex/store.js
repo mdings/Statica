@@ -8,25 +8,20 @@ const persist = require('./persist')
 const fs = require('fs')
 const parse = require('parse-git-config')
 
-const storePass = (service) => {
-
+const storePass = service => {
     // Store password fields safely with keytar
     if (service.password) {
-
         ipcRenderer.send('storePassword', {
-
             // projectId: this.project,
             serviceId: service.id,
             password: service.password
         })
-
     }
 }
 
 const store = new Vuex.Store({
 
     state: {
-
         projects: [],
         activeProject: {},
         activeService: null,
@@ -37,16 +32,13 @@ const store = new Vuex.Store({
     mutations: {
 
         GET_ALL_PROJECTS(state) {
-
             const projects = persist.getAllProjects()
 
             projects.forEach(project => {
-
                 project.status = 'indexing'
 
                 // Check if the path still exists for the project
                 if (!fs.existsSync(project.path)) {
-
                     project.unlinked = true
                 }
 
@@ -57,25 +49,22 @@ const store = new Vuex.Store({
                 })
 
                 if (config['remote "origin"']) {
-
                     project.repo = config['remote "origin"'].url
                 }
 
                 state.projects.push(project)
             })
 
-            state.projects.forEach(project => ipcRenderer.send('create-compiler', project))
-            persist.setAllProjects(state.projects)
+            state.projects.forEach(project => ipcRenderer.send('createCompiler', project))
+            // persist.setAllProjects(state.projects)
         },
 
         SET_ACTIVE_PROJECT(state, project) {
-
             state.activeProject = project
         },
 
         ADD_PROJECT(state, project) {
-
-            ipcRenderer.send('create-compiler', project)
+            ipcRenderer.send('createCompiler', project)
 
             console.log(project)
             state.projects.push(project)
@@ -83,10 +72,8 @@ const store = new Vuex.Store({
         },
 
         ADD_SERVICE(state, service) {
-
             storePass(service)
             if (!state.activeProject.services) {
-
                 state.activeProject.services = []
             }
             state.activeProject.services.push(service)
@@ -94,7 +81,6 @@ const store = new Vuex.Store({
         },
 
         EDIT_SERVICE(state, service) {
-
             storePass(service)
             const services = state.activeProject.services.map(originalService => {
 
@@ -109,9 +95,7 @@ const store = new Vuex.Store({
         },
 
         REMOVE_SERVICE(state, service) {
-
             state.activeProject.services = state.activeProject.services.filter(originalService => {
-
                 return originalService != service
             })
 
@@ -119,15 +103,13 @@ const store = new Vuex.Store({
         },
 
         REMOVE_PROJECT(state, project) {
-
             const projects = state.projects.filter(item => item != project)
             state.projects = projects
             persist.setAllProjects(projects)
-            ipcRenderer.send('remove-compiler', project)
+            ipcRenderer.send('removeCompiler', project)
         },
 
         SET_ACTIVE_SERVICE(state, service) {
-
             // Retrieve the password from the service
             const password = ipcRenderer.sendSync('retrievePassword', service.id)
             console.log('your password is ', password, ':)')
@@ -136,16 +118,12 @@ const store = new Vuex.Store({
         },
 
         RESET_ACTIVE_SERVICE(state) {
-
             state.activeService = null
         },
 
         SET_PROJECT_STATUS(state, data) {
-
             state.projects = state.projects.map(project => {
-
                 if (project.id == data.project.id) {
-
                     project.status = data.status
                 }
 
@@ -154,37 +132,28 @@ const store = new Vuex.Store({
         },
 
         SAVE_PROJECTS(state, projects) {
-
             persist.setAllProjects(state.projects)
         },
 
         SHOW_FORM(state, action) {
-
             state.action = action
             state.isFormOpen = true
         },
 
         HIDE_FORM(state) {
-
             // If the form is already open we want the dynamic form only to update when the animation is done
             if (state.isFormOpen) {
-
                 const form = document.querySelector('[data-form]')
                 const removeAction = (e) => {
-
                     if (!form.classList.contains('visible')) {
-
                         state.action = null
                     }
-
                     form.removeEventListener('transitionend', removeAction)
                 }
 
                 state.isFormOpen = false
                 form.addEventListener('transitionend', removeAction)
-
             } else {
-
                 state.action = null
                 state.isFormOpen = false
             }
@@ -195,74 +164,60 @@ const store = new Vuex.Store({
     actions: {
 
         getAllProjects({commit}) {
-
             commit('GET_ALL_PROJECTS')
         },
 
         setActiveProject({commit}, project) {
-
             commit('HIDE_FORM')
             commit('SET_ACTIVE_PROJECT', project)
         },
 
         addProject({commit}, project) {
-
             commit('ADD_PROJECT', project)
         },
 
         addService({commit}, service) {
-
             commit('ADD_SERVICE', service)
         },
 
         editService({commit}, service) {
-
             commit('EDIT_SERVICE', service)
         },
 
         removeService({commit}, service) {
-
             commit('REMOVE_SERVICE', service)
         },
 
         removeProject({commit}, project) {
-
             commit('REMOVE_PROJECT', project)
         },
 
         setProjectStatus({commit}, data) {
-
             commit('SET_PROJECT_STATUS', data)
         },
 
         setActiveService({commit}, service) {
-
             commit('SET_ACTIVE_SERVICE', service)
         },
 
         resetActiveService({commit}) {
-
             commit('RESET_ACTIVE_SERVICE')
         },
 
         saveProjects({commit}, projects) {
-
             commit('SAVE_PROJECTS', projects)
         },
 
         showForm({commit}, action) {
-
             commit('SHOW_FORM', action)
         },
 
         hideForm({commit}) {
-
             commit('HIDE_FORM')
         }
     },
 
     getters: {
-
         projects: state => state.projects,
         services: state => state.activeProject.services,
         activeService: state => state.activeService,
@@ -272,8 +227,7 @@ const store = new Vuex.Store({
     }
 })
 
-ipcRenderer.on('status-update', (e, data) => {
-
+ipcRenderer.on('statusUpdate', (e, data) => {
     store.dispatch('setProjectStatus', data)
 })
 

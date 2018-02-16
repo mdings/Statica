@@ -56,7 +56,7 @@
             useExporter() {
 
                 // Dispatch event to optimize project
-                ipcRenderer.send('optimize-project', this.activeProject.id)
+                ipcRenderer.send('optimizeProject', this.activeProject.id)
                 this.$root.$emit('activityLogger', 'Optimizing files, hold on..')
             }
         }

@@ -1,4 +1,4 @@
-// Gives the type of page for the masters
+// Only these types are handled by the compiler. In case of filetype other, the file is just copied
 module.exports = {
     '.scss':    'stylesheet',
     '.less':    'stylesheet',
@@ -19,5 +19,10 @@ module.exports = {
     '.jpg':     'image',
     '.svg':     'image',
     '.png':     'image',
-    '.gif':     'image'
+    '.gif':     'image',
+    '.pdf':     'other',
+    '.txt':     'other',
+    '.json':    'other',
+    '.csv':     'other',
+    '.xml':     'other'
 }
