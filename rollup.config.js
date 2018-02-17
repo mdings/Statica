@@ -15,14 +15,14 @@ export default [{
         format: 'cjs'
     }
 }, {
-    input: './src/app/projects/index.js',
+    input: './src/app/projects/view.js',
     output: {
         file: './dist/projects.js',
         format: 'cjs'
     },
     plugins: plugins
 }, {
-    input: './src/app/services/index.js',
+    input: './src/app/services/view.js',
     output: {
         file: './dist/services.js',
         format: 'cjs'
