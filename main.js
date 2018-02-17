@@ -4,7 +4,7 @@ const { ipcMain, app, BrowserWindow, Tray } = require('electron')
 const fs = require('fs')
 const path = require('upath')
 const url = require('url')
-const store = require('./src/app/persist')
+const store = require('./src/app/persist.cjs')
 const keytar = require('keytar')
 const parse = require('parse-git-config')
 const settings = require('electron-settings')
@@ -91,62 +91,63 @@ app.on('before-quit', () => {
 
 // Communications!
 
-ipcMain.on('showExportersWindow', (e, project) => {
-    bw.deployers.webContents.send('setActiveProject', store.getProjectById(project))
+ipcMain.on('showServicesWindow', (e, {id}) => {
+    console.log(id)
+    bw.deployers.webContents.send('getServices', store.getProjectById(id))
     bw.deployers.show()
 })
 
-ipcMain.on('createCompiler', (e, project) => {
-    bw.worker.webContents.send('createCompiler', project)
-})
+// ipcMain.on('createCompiler', (e, project) => {
+//     bw.worker.webContents.send('createCompiler', project)
+// })
 
-ipcMain.on('removeCompiler', (e, project) => {
-    bw.worker.webContents.send('removeCompiler', project.id)
-})
+// ipcMain.on('removeCompiler', (e, project) => {
+//     bw.worker.webContents.send('removeCompiler', project.id)
+// })
 
-ipcMain.on('optimizeProject', (e, id) => {
-    bw.worker.webContents.send('optimizeProject', id)
-})
+// ipcMain.on('optimizeProject', (e, id) => {
+//     bw.worker.webContents.send('optimizeProject', id)
+// })
 
-ipcMain.on('doneOptimizeProject', (e, project) => {
-    bw.deployers.webContents.send('doneOptimizeProject', project)
-})
+// ipcMain.on('doneOptimizeProject', (e, project) => {
+//     bw.deployers.webContents.send('doneOptimizeProject', project)
+// })
 
-ipcMain.on('projectError', (e, data) => {
-    bw.projects.webContents.send('projectError', data)
-})
+// ipcMain.on('projectError', (e, data) => {
+//     bw.projects.webContents.send('projectError', data)
+// })
 
-ipcMain.on('statusUpdate', (e, data) => {
-    bw.projects.webContents.send('statusUpdate', data)
-})
+// ipcMain.on('statusUpdate', (e, data) => {
+//     bw.projects.webContents.send('statusUpdate', data)
+// })
 
-ipcMain.on('unlinkProject', (e, project) => {
-    project.unlinked = true
-    store.setProjectById(project)
-    bw.projects.webContents.send('reloadProjects', store.getAllProjects())
-})
+// ipcMain.on('unlinkProject', (e, project) => {
+//     project.unlinked = true
+//     store.setProjectById(project)
+//     bw.projects.webContents.send('reloadProjects', store.getAllProjects())
+// })
 
-ipcMain.on('startServer', (e, project) => {
-    bw.worker.webContents.send('startServer', project)
-})
+// ipcMain.on('startServer', (e, project) => {
+//     bw.worker.webContents.send('startServer', project)
+// })
 
-ipcMain.on('storePassword', (e, details) => {
-    console.log('setting password', details.password)
-    keytar.setPassword('statica', details.serviceId, details.password)
-})
+// ipcMain.on('storePassword', (e, details) => {
+//     console.log('setting password', details.password)
+//     keytar.setPassword('statica', details.serviceId, details.password)
+// })
 
-ipcMain.on('retrievePassword', (e, serviceId) => {
-    keytar.getPassword(`statica`, serviceId).then(password => {
-        console.log('getting password', password)
-        e.returnValue = password
-    })
-})
+// ipcMain.on('retrievePassword', (e, serviceId) => {
+//     keytar.getPassword(`statica`, serviceId).then(password => {
+//         console.log('getting password', password)
+//         e.returnValue = password
+//     })
+// })
 
-ipcMain.on('reloadActiveProject', e => {
-    bw.deployers.webContents.send('reloadActiveProject')
-})
+// ipcMain.on('reloadActiveProject', e => {
+//     bw.deployers.webContents.send('reloadActiveProject')
+// })
 
-ipcMain.on('setServiceStatus', (e, status, service, message = null) => {
-    console.log('receiving set service status', status, service)
-    bw.deployers.webContents.send('setServiceStatus', status, service)
-})
+// ipcMain.on('setServiceStatus', (e, status, service, message = null) => {
+//     console.log('receiving set service status', status, service)
+//     bw.deployers.webContents.send('setServiceStatus', status, service)
+// })

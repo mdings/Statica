@@ -1,0 +1,41 @@
+*,
+*:before,
+*:after {
+    margin: 0;
+    padding: 0;
+    outline: none;
+    box-sizing: border-box;
+    cursor: default;
+    -webkit-user-select: none;
+}
+
+body {
+    height: 100vh;
+    overflow: hidden;
+    font-family: system,-apple-system,".SFNSDisplay-Regular","Helvetica Neue",Helvetica,"Segoe UI",sans-serif;
+    opacity: 1;
+    background-color: #fff;
+}
+
+.window {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.body {
+    height: 100%;
+    overflow: auto;
+}
+
+ul, li {
+    list-style: none;
+}
+
+.visible {
+    display: block;
+}
+
+.hidden {
+    display: none;
+}

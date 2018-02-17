@@ -3,7 +3,7 @@
         [
             "env",
             {
-                "modules": false // we set modules to false because rollup fucks up otherwise
+                "modules": false
             }
         ]
     ],

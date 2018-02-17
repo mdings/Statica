@@ -1,0 +1,49 @@
+@import "../elements/inputs";
+
+header {
+    width: 100%;
+    -webkit-app-region: drag;
+    background-color: #fff;
+    border-bottom: 1px solid #f1f1f1;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    flex: 0 0 38px;
+    font-size: 13px;
+
+    // disable draggin on any other element then root element
+    * {
+        -webkit-app-region: no-drag;
+    }
+
+    button {
+        @extend %button;
+        width: 30px;
+        position: relative;
+        margin: 0 10px 0 auto;
+
+        svg {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 23px;
+            height: auto;
+            fill: #222;
+            transform: translate(-50%, -50%);
+            transform-origin: 50% 50%;
+            transition: transform 350ms cubic-bezier(0.77, 0, 0.175, 1);
+
+            &.close {
+                transform: translate(-50%, -50%) rotate(225deg);
+            }
+        }
+    }
+
+    .title {
+        // We will allow dragging on the title
+        -webkit-app-region: drag;
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+}

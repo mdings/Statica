@@ -1,0 +1,31 @@
+%service {
+
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    padding: 5px 10px;
+
+    &:nth-child(1) {
+
+        border-bottom: 1px solid #f1f1f1;
+        font-size: 14px;
+    }
+
+    &.active {
+
+        background-color: #E9F3FE;
+    }
+
+    span:nth-child(1) {
+
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        padding-right: 10px;
+    }
+
+    span:nth-child(2) {
+
+        flex: 0 0 120px;
+    }
+}
