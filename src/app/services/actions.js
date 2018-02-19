@@ -12,16 +12,9 @@ export const actions = {
     add: e => state => {
         e.preventDefault()
         if (state.project) {
-            // Read the values from the forms first
-            const form = e.target.parentNode
-            const formData = new FormData(form)
-            let service = {}
-            for (const [key, value]  of formData.entries()) {
-                service[key] = value
-            }
-            console.log(service)
+            state.active.type = state.type
             const projectId = state.project.id
-            const items = state.items.concat([service])
+            const items = state.items.concat([state.active])
             setServicesByProjectId(projectId, items)
             return ({ items, isPaneActive: false })
         }
@@ -41,6 +34,7 @@ export const actions = {
     toggleAdding: (value = null) => state => {
         const model = Service(state.type)
         return ({
+            active: null,
             isPaneActive: value ? value : !state.isPaneActive
         })
     },
