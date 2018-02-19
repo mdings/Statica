@@ -1,18 +1,26 @@
+import { setAllProjects } from '../persist'
+
 export const actions = {
-    loadAll: value => state => ({
+    load: value => state => ({
         items: state.items.concat(value)
     }),
-    add: value => state => ({
-        items: state.items.concat(value)
-    }),
-    toggleFav: value => state => ({
-        items: state.items.map(item => {
-            if (item.id == value) {
-                item.favourite = !item.favourite
-                return item
-            } else {
-                return item
-            }
+    add: value => state => {
+        const items = state.items.concat(value)
+        setAllProjects(items)
+        return ({ items })
+    },
+    remove: value => state => {
+        const index = state.items.indexOf(value)
+        state.items.splice(index, 1)
+        setAllProjects(state.items)
+        return ({ items: state.items })
+    },
+    toggleFav: value => state => {
+        const items = state.items.map(item => {
+            item.favourite = item.id == value ? !item.favourite : item.favourite
+            return item
         })
-    })
+        setAllProjects(items)
+        return ({ items })
+    }
 }

@@ -1,5 +1,6 @@
 import '../sass/components/titlebar.scss'
 import '../sass/components/project.scss'
+import '../sass/components/statusbar.scss'
 
 import { h } from 'hyperapp'
 

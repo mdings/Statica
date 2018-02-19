@@ -92,8 +92,7 @@ app.on('before-quit', () => {
 // Communications!
 
 ipcMain.on('showServicesWindow', (e, {id}) => {
-    console.log(id)
-    bw.deployers.webContents.send('getServices', store.getProjectById(id))
+    bw.deployers.webContents.send('getServicesForProject', id)
     bw.deployers.show()
 })
 

@@ -1,4 +1,5 @@
 export const state = {
     items: [],
-    active: null
+    active: null,
+    isMessage: null
 }

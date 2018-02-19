@@ -1,0 +1,23 @@
+.table {
+
+    li {
+        display: flex;
+        justify-content: space-between;
+
+        &:first-child {
+            border-bottom: 1px solid #f1f1f1;
+        }
+
+        &.is-active {
+            background-color: $color-blue;
+        }
+
+        span {
+
+            &:last-child {
+                width: 40%;
+                min-width: 200px;
+            }
+        }
+    }
+}

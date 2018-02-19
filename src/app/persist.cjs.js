@@ -14,12 +14,22 @@ const getAllProjects = () => {
     return store.get('projects') || []
 };
 
+// export const getAllServices = id => {
+//     const services = store.get('services') || []
+//     return services.filter(service => service.project == id)
+// }
+
 const setAllProjects = projects => {
-    store.set('projects', omit(projects, ['password']));
+    store.set('projects', projects);
 };
 
-const getProjectById = project => {
-    return store.get('projects').find(p => p.id == project.id)
+// export const setAllServices = services => {
+//     // Make sure we don't save any passwords in the json file
+//     store.set('services', omit(services, ['password']))
+// }
+
+const getProjectById = id => {
+    return store.get('projects').find(project => project.id == id)
 };
 
 const setProjectById = project => {
@@ -34,8 +44,15 @@ const setProjectById = project => {
     store.set('projects', projects);
 };
 
+const setServicesByProjectId = (id, services) => {
+    const project = getProjectById(id);
+    project.services = services;
+    setProjectById(project);
+};
+
 exports.clearAllProjects = clearAllProjects;
 exports.getAllProjects = getAllProjects;
 exports.setAllProjects = setAllProjects;
 exports.getProjectById = getProjectById;
 exports.setProjectById = setProjectById;
+exports.setServicesByProjectId = setServicesByProjectId;

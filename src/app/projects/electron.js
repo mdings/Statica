@@ -39,7 +39,7 @@ export const openMenu = (actions, project) => {
         type: 'separator'
     }, {
         label: 'Remove project',
-        click() { console.log(actions) }
+        click() { actions.remove(project) }
     }]
     const menu = Menu.buildFromTemplate(template)
     menu.popup(remote.getCurrentWindow())

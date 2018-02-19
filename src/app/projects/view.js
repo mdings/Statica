@@ -18,22 +18,28 @@ const otherProjects = state => {
 const view = (state, actions) => (
     <div class="window">
         <Titlebar openDialog={e => openDialog(actions)}/>
-        <div class="projects body">
-            <div class="divider" class={favProjects(state).length > 0 ? 'visible' : 'hidden'}>
-                <span class="sticky">Favourites</span>
-                <ul class="projects--favourite">
-                    {favProjects(state).map(project => (
-                        <Project openMenu={e => openMenu(actions, project)} project={project} toggleFav={actions.toggleFav} />
-                    ))}
-                </ul>
+        <div class={state.isMessage ? 'message visible' : 'message hidden'}>There is an update available. Click to restart</div>
+        <div class="body">
+            <div class={state.items.length > 0 ? 'projects visible' : 'projects hidden'}>
+                <div class={favProjects(state).length > 0 ? 'divider visible' : 'divider hidden'}>
+                    <span class="sticky-label">Favourites</span>
+                    <ul class="projects--favourite">
+                        {favProjects(state).map(project => (
+                            <Project openMenu={e => openMenu(actions, project)} project={project} toggleFav={actions.toggleFav} />
+                        ))}
+                    </ul>
+                </div>
+                <div class={(otherProjects(state).length) > 0 ? 'divider visible' : 'divider hidden'}>
+                    <span class="sticky" class={(favProjects(state).length) > 0 ? 'sticky-label visible' : 'hidden'}>Others</span>
+                    <ul>
+                        {otherProjects(state).map(project => (
+                            <Project openMenu={e => openMenu(actions, project)} project={project} toggleFav={actions.toggleFav} />
+                        ))}
+                    </ul>
+                </div>
             </div>
-            <div class="divider" class={(otherProjects(state).length) > 0 ? 'visible' : 'hidden'}>
-                <span class="sticky" class={(favProjects(state).length) > 0 ? 'visible' : 'hidden'}>Others</span>
-                <ul>
-                    {otherProjects(state).map(project => (
-                        <Project openMenu={e => openMenu(actions, project)} project={project} toggleFav={actions.toggleFav} />
-                    ))}
-                </ul>
+            <div class={state.items.length > 0 ? 'empty-state hidden' : 'empty-state visible'}>
+                There a no projects yet. Click the '+' to add a new folder or drag and drop one in the projects area.
             </div>
         </div>
         <StatusBar projects={state.items} />
@@ -43,4 +49,4 @@ const view = (state, actions) => (
 // Bootstrap the app
 const app = _app(state, actions, view, document.body)
 const projects = getAllProjects()
-app.loadAll(projects)
+app.load(projects)
