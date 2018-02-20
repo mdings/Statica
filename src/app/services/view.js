@@ -3,7 +3,7 @@ import { h, app as _app } from 'hyperapp'
 
 import { actions } from './actions'
 import { state } from './state'
-import { Titlebar, SlidePane, Exporter, Table } from './components';
+import { Titlebar, SlidePane, Exporter, Table, ActionBar } from './components';
 
 const { ipcRenderer } = require('electron')
 
@@ -19,7 +19,7 @@ const view = (state, actions) => {
     return (
         <div class="window">
             <Titlebar
-                toggleAdding={e => actions.toggleAdding()}
+                addButtonClick={e => actions.addButtonClick()}
                 isPaneActive={state.isPaneActive}
                 project={state.project} />
             <div class="services body">
@@ -33,6 +33,7 @@ const view = (state, actions) => {
                     ))}
                 </Table>
             </div>
+            <ActionBar editButtonClick={e => actions.editButtonClick()} remove={e => actions.remove()} />
             <SlidePane isPaneActive={state.isPaneActive}>
                 <label>Choose a service</label>
                 <select onchange={e => actions.setService(e.target.options[e.target.selectedIndex].value)}>

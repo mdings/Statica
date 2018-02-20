@@ -1,13 +1,14 @@
 import '../sass/components/titlebar.scss'
 import '../sass/components/slide-pane.scss'
 import '../sass/components/table.scss'
+import '../sass/components/actionbar.scss'
 
 import { h } from 'hyperapp'
 
-export const Titlebar = ({toggleAdding, isPaneActive, project}) => (
+export const Titlebar = ({addButtonClick, isPaneActive, project}) => (
     <header>
         Deploying for: {project.name}
-        <button onclick={toggleAdding}>
+        <button onclick={addButtonClick}>
             <svg class={isPaneActive ? 'can-close' : ''} viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
                 <path d="M61 37H43V19h-6v18H19v6h18v18h6V43h18"/>
             </svg>
@@ -19,6 +20,14 @@ export const SlidePane = ({isPaneActive}, children) => (
     <div class={isPaneActive ? 'slide-pane is-active' : 'slide-pane'}>
         {children}
     </div>
+)
+
+export const ActionBar = ({editButtonClick, remove}, children) => (
+    <ul class="actionbar">
+        <li onclick={editButtonClick}>Edit</li>
+        <li onclick={remove}>Remove</li>
+        <li>Deploy</li>
+    </ul>
 )
 
 const GithubPages = ({checkValidity, activeService}, button) => (

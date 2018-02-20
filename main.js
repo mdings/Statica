@@ -130,17 +130,21 @@ ipcMain.on('showServicesWindow', (e, {id}) => {
 //     bw.worker.webContents.send('startServer', project)
 // })
 
-// ipcMain.on('storePassword', (e, details) => {
-//     console.log('setting password', details.password)
-//     keytar.setPassword('statica', details.serviceId, details.password)
-// })
+ipcMain.on('storePassword', (e, {id, password}) => {
+    console.log('setting', id, 'for', password)
+    if (keytar.setPassword('statica', id, password)) {
+        e.returnValue = true
+    } else {
+        e.returnValue = false
+    }
+})
 
-// ipcMain.on('retrievePassword', (e, serviceId) => {
-//     keytar.getPassword(`statica`, serviceId).then(password => {
-//         console.log('getting password', password)
-//         e.returnValue = password
-//     })
-// })
+ipcMain.on('retrievePassword', (e, serviceId) => {
+    keytar.getPassword(`statica`, serviceId).then(password => {
+        console.log('getting password', password)
+        e.returnValue = password
+    })
+})
 
 // ipcMain.on('reloadActiveProject', e => {
 //     bw.deployers.webContents.send('reloadActiveProject')
