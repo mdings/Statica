@@ -6,22 +6,30 @@ let vue
 
 class FTP {
 
-    constructor() {
+    constructor(actions, service, password) {
         const Client = require('ftp')
         this.client = new Client()
-        this.credentials = {}
+        this.actions = actions
+        this.credentials = service
+        this.credentials.password = password
+
+        console.log(this.credentials)
         this.client.on('ready', this.ready.bind(this))
         this.client.on('error', this.error.bind(this))
     }
 
+    run() {
+        this.connect(this.credentials)
+    }
+
     async ready() {
         try {
-            const homedir = this.credentials.service.homedir || '/'
+            const homedir = this.credentials.homedir || '/'
             await this.changeDirectory(homedir)
             const paths = await this.readDirectory()
             await this.createDirectories(paths.dirs)
             await this.uploadFiles(paths.files)
-            this.notify(this.credentials.project.name, 'Successfully deployed to FTP!')
+            this.notify(this.credentials.title, 'Successfully deployed to FTP!')
         } catch (err) {
             this.notify(err.title, err.message)
         }
@@ -31,7 +39,7 @@ class FTP {
         return new Promise((resolve, reject) => {
             this.client.cwd(dir, err => {
                 if (err) {
-                    const title = `Failed to FTP into ${this.credentials.project.name}`
+                    const title = `Failed to FTP into ${this.credentials.title}`
                     const message = err.message
                     return reject({title, message})
                 }
@@ -42,9 +50,9 @@ class FTP {
 
     readDirectory() {
         return new Promise((resolve, reject) => {
-            dir.paths(`${this.credentials.project.path}/build/`, (err, paths) => {
+            dir.paths(`${this.credentials.path}/build/`, (err, paths) => {
                 if (err) {
-                    const title = `FTP failed for ${this.credentials.project.name}`
+                    const title = `FTP failed for ${this.credentials.title}`
                     const message = err.message
                     return reject({title, message})
                 }
@@ -56,9 +64,9 @@ class FTP {
     createDirectories(dirs) {
         const dirsToCreate = dirs.map(dir => {
             return new Promise((resolve, reject) => {
-                this.client.mkdir(dir.replace(`${this.credentials.project.path}/build/`, ''), true, err => {
+                this.client.mkdir(dir.replace(`${this.credentials.path}/build/`, ''), true, err => {
                     if (err) {
-                        const title = `FTP failed for ${this.credentials.project.name}`
+                        const title = `FTP failed for ${this.credentials.title}`
                         const message = err.message
                         return reject({title, message})
                     }
@@ -75,11 +83,11 @@ class FTP {
                 const dest = file.replace(`${this.credentials.project.path}/build/`, '')
                 this.client.put(file, dest, err => {
                     if (err) {
-                        const title = `FTP failed for ${this.credentials.project.name}`
+                        const title = `FTP failed for ${this.credentials.title}`
                         const message = err.message
                         return reject({title, message})
                     }
-                    vue.$root.$emit('activityLogger', `Uploading ${path.parse(file).base}`)
+                    this.actions.showActivity(`Uploading ${path.parse(file).base}`)
                     resolve()
                 })
             })
@@ -88,11 +96,11 @@ class FTP {
     }
 
     error(err) {
-        this.notify(`Failed to FTP into ${this.credentials.project.name}`, err.message)
+        this.notify(`Failed to FTP into ${this.credentials.title}`, err.message)
     }
 
     notify(title, message) {
-        vue.$root.$emit('hideActivityLogger')
+        this.actions.hideActivity()
         notifier.notify({
             title,
             message,
@@ -102,27 +110,16 @@ class FTP {
         this.client.destroy()
     }
 
-    connect(project, service, pass, vm) {
-        // Update the credentials to the project that we're connecting to
-        // @TODO: look into destructuring
-        this.credentials.project = project
-        this.credentials.service = service
-        this.credentials.pass = pass
-        vue = vm
-
-        vue.$root.$emit('activityLogger', `Connecting..`)
-
+    connect({host, username, password}) {
+        this.actions.showActivity('Connecting to FTP..')
+        console.log(host, username, password)
         this.client.connect({
-            host: service.server,
+            host: host,
             port: 21,
-            user: service.username,
-            password: pass
+            user: username,
+            password: password
         })
     }
 }
 
-const ftp = new FTP()
-
-export default ftp
-// Explicitly bind to ftp object!
-// module.exports = ftp.connect.bind(ftp)
+export default FTP

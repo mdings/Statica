@@ -14,19 +14,10 @@ const getAllProjects = () => {
     return store.get('projects') || []
 };
 
-// export const getAllServices = id => {
-//     const services = store.get('services') || []
-//     return services.filter(service => service.project == id)
-// }
-
 const setAllProjects = projects => {
-    store.set('projects', projects);
+    // Make sure we don't save any passwords in the json file
+    store.set('projects', omit(projects, ['password']));
 };
-
-// export const setAllServices = services => {
-//     // Make sure we don't save any passwords in the json file
-//     store.set('services', omit(services, ['password']))
-// }
 
 const getProjectById = id => {
     return store.get('projects').find(project => project.id == id)
@@ -41,7 +32,7 @@ const setProjectById = project => {
             return current
         }
     });
-    store.set('projects', projects);
+    setAllProjects(projects);
 };
 
 const setServicesByProjectId = (id, services) => {

@@ -3,11 +3,15 @@ import { ipcRenderer } from 'electron'
 import { Service } from './models'
 import { getProjectById, setServicesByProjectId } from '../persist'
 
-import ftp from './ftp'
+import FTP from './ftp'
+const exporters = {
+    FTP
+}
 
 export const actions = {
     load: id => state => {
         const project = getProjectById(id)
+        console.log(project.services)
         return ({
             project: project,
             items: project.services
@@ -54,6 +58,12 @@ export const actions = {
     editButtonClick: value => state => ({
         isPaneActive: true
     }),
+    deploy: value => (state, actions) => {
+        console.log(state.active)
+        const password = ipcRenderer.sendSync('retrievePassword', state.active)
+        const exporter = new exporters[state.active.type](actions, state.active, password)
+        exporter.run()
+    },
     checkValidity: e => state => {
         const form = e.target.parentNode
         const fields = form.querySelectorAll(`[required]`)
@@ -64,5 +74,11 @@ export const actions = {
             active: state.active,
             isButtonDisabled: invalidated.length > 0 ? true : false
         })
-    }
+    },
+    showActivity: value => state => ({
+        isActivity: value
+    }),
+    hideActivity: value => state => ({
+        isActivity: null
+    })
 }

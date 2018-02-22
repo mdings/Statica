@@ -2,6 +2,7 @@ import '../sass/components/titlebar.scss'
 import '../sass/components/slide-pane.scss'
 import '../sass/components/table.scss'
 import '../sass/components/actionbar.scss'
+import '../sass/components/activitybar.scss'
 
 import { h } from 'hyperapp'
 
@@ -22,13 +23,20 @@ export const SlidePane = ({isPaneActive}, children) => (
     </div>
 )
 
-export const ActionBar = ({editButtonClick, remove}, children) => (
+export const ActionBar = ({editButtonClick, remove, deploy}, children) => (
     <ul class="actionbar">
         <li onclick={editButtonClick}>Edit</li>
         <li onclick={remove}>Remove</li>
-        <li>Deploy</li>
+        <li onclick={deploy}>Deploy</li>
     </ul>
 )
+
+export const ActivityBar = ({message}) => {
+    const className = message && message.length ? 'activitybar is-active' : 'activitybar'
+    return (
+        <div class={className}>{message}</div>
+    )
+}
 
 const GithubPages = ({checkValidity, activeService}, button) => (
     <form>

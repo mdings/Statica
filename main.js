@@ -139,8 +139,8 @@ ipcMain.on('storePassword', (e, {id, password}) => {
     }
 })
 
-ipcMain.on('retrievePassword', (e, serviceId) => {
-    keytar.getPassword(`statica`, serviceId).then(password => {
+ipcMain.on('retrievePassword', (e, {id}) => {
+    keytar.getPassword(`statica`, id).then(password => {
         console.log('getting password', password)
         e.returnValue = password
     })
