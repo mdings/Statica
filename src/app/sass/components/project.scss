@@ -8,6 +8,21 @@
     flex-shrink: 1;
     max-width: 100vw;
     text-align: left;
+
+    &.is-blocked {
+        position: relative;
+
+        &:after {
+            display: block;
+            content: '';
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            background: rgba(#fff, 0.6);
+        }
+    }
 }
 
 .project__favourite-toggle {

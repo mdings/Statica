@@ -12,7 +12,7 @@ export const getAllProjects = () => {
 
 export const setAllProjects = projects => {
     // Make sure we don't save any passwords in the json file
-    store.set('projects', omit(projects, ['password']))
+    store.set('projects', omit(projects, ['password', 'blocked']))
 }
 
 export const getProjectById = id => {

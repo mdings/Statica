@@ -14,14 +14,15 @@ export const Titlebar = ({openDialog}) => (
     </header>
 )
 
-export const StatusBar = ({projects}) => (
+export const StatusBar = ({state}) => (
     <footer>
-        Watching {projects.length} folders
+        Watching {state.items.length} folders
+        compiling {state.compiling.join(',')}
     </footer>
 )
 
 export const Project = ({project, toggleFav, openMenu}) => (
-    <li class="project">
+    <li class={project.block ? `project is-blocked` : `project`}>
         <svg class="project__favourite-toggle" onclick={() => toggleFav(project.id)} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
             <g fill="none" fill-rule="evenodd">
                 <path d="M11.985 18.136L5.187 23l2.35-8.012L1 9.562l7.95-.07L11.985 1l2.95 8.562H23l-6.567 5.478 2.35 7.96-6.798-4.864z"/>

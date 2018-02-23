@@ -22,9 +22,40 @@ const hasUnderscore = filename => {
     return parts.length > 0 ? true : false
 }
 
+const events = {
+    ready: null,
+    change: null,
+    success: null,
+    error: null
+}
+
 module.exports = class Compiler {
 
     constructor(project) {
+        return this.init(project)
+    }
+
+    attach(e, callback) {
+        if (events.hasOwnProperty(e)) {
+            if (typeof callback == 'function') {
+                events[e] = callback
+            }
+        }
+    }
+
+    on(e, callback) {
+        // arguments = e, callback
+        this.attach.apply(this, arguments)
+    }
+
+    trigger(e, ctx, args) {
+        console.log(events[e])
+        if (events[e]) {
+            events[e].call(ctx, args)
+        }
+    }
+
+    init(project) {
         this.project = project
         this.ready = false // we're ready when all files have been indexed
         this.files = []
@@ -40,13 +71,10 @@ module.exports = class Compiler {
         .on('unlink', filename => this.unlink(path.normalize(filename)))
         .on('unlinkDir', dirname => this.unlinkDir(path.normalize(dirname)))
         .on('change', filename => this.change(filename))
+        .on('error', () => reject(this.project))
         .on('ready', () => {
-            // @TODO: create a separate window to do an initial rendering of ALL the files?
             this.ready = true
-            ipcRenderer.send('statusUpdate', {
-                status: 'ready',
-                project
-            })
+            this.trigger('ready', this, project)
         })
     }
 
@@ -61,7 +89,7 @@ module.exports = class Compiler {
             const ext = path.extname(filename).toLowerCase()
             const type = extensions[ext]
 
-            console.log(filename, type)
+            // console.log(filename, type)
             const file = new fileTypes[type](filename, this.project)
             const project = this.project
 
@@ -108,10 +136,10 @@ module.exports = class Compiler {
      */
 
     unlinkDir(dirname) {
-        console.log(this.project.path)
+        // console.log(this.project.path)
         if (!fs.existsSync(this.project.path)) {
             ipcRenderer.send('unlinkProject', this.project)
-            console.log('unlinking dir')
+            // console.log('unlinking dir')
         }
     }
 
@@ -150,21 +178,15 @@ module.exports = class Compiler {
         }
 
         if (filesToRender.length) {
-            // Notify the UI of a project being processed
-            ipcRenderer.send('statusUpdate', {
-                status: 'processing',
-                project: this.project
-            })
+
+            this.trigger('change', this, this.project)
 
             filesToRender = filesToRender.map(file => file.render())
 
             Promise
             .all(filesToRender)
             .then(() => {
-                ipcRenderer.send('statusUpdate', {
-                    status: 'success',
-                    project: this.project
-                })
+                this.trigger('success', this, this.project)
             }, err => {
                 console.log('from statica.js', err)
                 try {
@@ -182,11 +204,7 @@ module.exports = class Compiler {
                     console.log(err)
                 }
 
-                // @todo: should be error
-                ipcRenderer.send('statusUpdate', {
-                    status: 'success',
-                    project: this.project
-                })
+                this.trigger('error', this, this.project)
             })
         }
     }

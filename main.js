@@ -18,6 +18,13 @@ const updateBounds = windowName => {
 }
 
 app.on('ready', () => {
+
+    bw.worker = new BrowserWindow({
+        width: 300,
+        height: 300,
+        show: true
+    })
+
     bw.projects = new BrowserWindow({
         maximizable: false,
         width: 320,
@@ -36,12 +43,6 @@ app.on('ready', () => {
         fullscreenable: false,
         titleBarStyle: 'hiddenInset',
         show: false
-    })
-
-    bw.worker = new BrowserWindow({
-        width: 300,
-        height: 300,
-        show: true
     })
 
     bw.projects.loadURL(`file://${__dirname}/projects.html`)
@@ -73,10 +74,10 @@ app.on('ready', () => {
         }
     })
 
-    bw.deployers.on('move', () => updateBounds('deployers'))
-    bw.deployers.on('resize', () => updateBounds('deployers'))
-    bw.projects.on('move', () => updateBounds('projects'))
-    bw.projects.on('resize', () => updateBounds('projects'))
+    bw.deployers.on('move', e => updateBounds('deployers'))
+    bw.deployers.on('resize', e => updateBounds('deployers'))
+    bw.projects.on('move', e => updateBounds('projects'))
+    bw.projects.on('resize', e => updateBounds('projects'))
 })
 
 app.on('activate', () => {
@@ -89,6 +90,8 @@ app.on('before-quit', () => {
     delete bw.worker
 })
 
+
+// app.load(projects)
 // Communications!
 
 ipcMain.on('showServicesWindow', (e, {id}) => {
@@ -96,9 +99,22 @@ ipcMain.on('showServicesWindow', (e, {id}) => {
     bw.deployers.show()
 })
 
-// ipcMain.on('createCompiler', (e, project) => {
-//     bw.worker.webContents.send('createCompiler', project)
-// })
+ipcMain.on('createCompiler', (e, project) => {
+    bw.worker.webContents.send('createCompiler', project)
+})
+
+ipcMain.on('createCompilerComplete', (e, project) => {
+    bw.projects.webContents.send('createCompilerComplete', project)
+})
+
+ipcMain.on('setIsCompiling', (e, project) => {
+    bw.projects.webContents.send('setIsCompiling', project)
+})
+
+ipcMain.on('setIsCompilingSuccess', (e, project) => {
+    console.log('SET COMPILING SUCCESS')
+    bw.projects.webContents.send('setIsCompilingSuccess', project)
+})
 
 // ipcMain.on('removeCompiler', (e, project) => {
 //     bw.worker.webContents.send('removeCompiler', project.id)

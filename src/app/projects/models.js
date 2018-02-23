@@ -5,6 +5,7 @@ export const project = folder => ({
     id: id.generate(),
     name: path.basename(folder),
     favourite: false,
+    block: true,
     path: folder,
     services: []
 })

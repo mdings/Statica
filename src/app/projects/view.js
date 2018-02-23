@@ -7,6 +7,8 @@ import { Titlebar, Project, StatusBar } from './components'
 import { openDialog, openMenu } from './electron'
 import { getAllProjects } from '../persist'
 
+const { ipcRenderer } = require('electron')
+
 const favProjects = state => {
     return state.items.filter(project => project.favourite)
 }
@@ -42,11 +44,29 @@ const view = (state, actions) => (
                 There a no projects yet. Click the '+' to add a new folder or drag and drop one in the projects area.
             </div>
         </div>
-        <StatusBar projects={state.items} />
+        <StatusBar state={state} />
     </div>
 )
 
 // Bootstrap the app
 const app = _app(state, actions, view, document.body)
+
 const projects = getAllProjects()
-app.load(projects)
+projects.forEach(project => {
+    ipcRenderer.send('createCompiler', project)
+    project.block = true
+    app.load(project)
+})
+
+// Listen for communications from the main window
+ipcRenderer.on('createCompilerComplete', (e, project) => {
+    app.unblock(project)
+})
+
+ipcRenderer.on('setIsCompiling', (e, {id}) => {
+    app.addCompiling(id)
+})
+
+ipcRenderer.on('setIsCompilingSuccess', (e, {id}) => {
+    app.removeCompiling(id)
+})
