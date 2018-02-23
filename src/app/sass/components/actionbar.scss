@@ -5,9 +5,27 @@
     flex-grow: 0;
     display: flex;
     height: 40px;
+    border-top: 1px solid #f1f1f1;
+    align-items: center;
 
     li {
         text-align: center;
         width: (100/3)*1%
+    }
+
+    &.is-disabled {
+        pointer-events: none;
+        position: relative;
+
+        &:after {
+            display: block;
+            content: '';
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            background-color: rgba(#fff, .6);
+        }
     }
 }

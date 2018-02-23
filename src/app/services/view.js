@@ -33,20 +33,18 @@ const view = (state, actions) => {
                     ))}
                 </Table>
             </div>
-            <ActionBar editButtonClick={e => actions.editButtonClick()} remove={e => actions.remove()} deploy={e => actions.deploy()} />
+            <ActionBar state={state} actions={actions} />
             <ActivityBar message={state.isActivity} />
             <SlidePane isPaneActive={state.isPaneActive}>
-                <label>Choose a service</label>
-                <select onchange={e => actions.setService(e.target.options[e.target.selectedIndex].value)}>
-                    <option value="FTP">FTP</option>
-                    <option value="GithubPages">Github pages</option>
-                </select>
-                <Exporter
-                    type={state.type}
-                    isButtonDisabled={state.isButtonDisabled}
-                    add={e => actions.add(e)}
-                    activeService={state.active}
-                    checkValidity={e => actions.checkValidity(e)} />
+                <span class={state.inputMode == state.inputModes[0] ? `visible` : `hidden`}>
+                    <label>Choose a service</label>
+                    <select
+                        onchange={e => actions.setService(e.target.options[e.target.selectedIndex].value)}>
+                        <option value="FTP" selected={state.type=='FTP'}>FTP</option>
+                        <option value="GithubPages" selected={state.type=='GithubPages'}>Github pages</option>
+                    </select>
+                </span>
+                <Exporter state={state} actions={actions} />
             </SlidePane>
         </div>
     )

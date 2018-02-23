@@ -13,6 +13,9 @@ export const actions = {
         const project = getProjectById(id)
         console.log(project.services)
         return ({
+            active: null,
+            isButtonDisabled: true,
+            isPaneActive: false,
             project: project,
             items: project.services
         })
@@ -20,10 +23,23 @@ export const actions = {
     add: e => state => {
         e.preventDefault()
         if (state.project) {
-            state.active.id = id.generate()
-            state.active.type = state.type
-            const items = state.items.concat([state.active])
-            const isPasswordSet = ipcRenderer.sendSync('storePassword', state.active)
+            state.fields.id = id.generate()
+            state.fields.type = state.type
+            const items = state.items.concat([state.fields])
+            const isPasswordSet = ipcRenderer.sendSync('storePassword', state.fields)
+            if (isPasswordSet) {
+                setServicesByProjectId(state.project.id, items)
+            }
+            return ({ items, isPaneActive: false })
+        }
+    },
+    edit: e => state => {
+        e.preventDefault()
+        if (state.project) {
+            const isPasswordSet = ipcRenderer.sendSync('storePassword', state.fields)
+            const items = state.items.map(
+                item => item.id == state.fields.id ? state.fields : items
+            )
             if (isPasswordSet) {
                 setServicesByProjectId(state.project.id, items)
             }
@@ -35,7 +51,7 @@ export const actions = {
         state.items.splice(index, 1)
         setServicesByProjectId(state.project.id, state.items)
         return ({
-            active: {},
+            active: null,
             items: state.items
         })
     },
@@ -43,21 +59,36 @@ export const actions = {
         // const select = e.target
         // const value = select.options[select.selectedIndex].value
         return ({
+            fields: {},
             isButtonDisabled: true,
             type: value
         })
     },
     setActive: service => state => ({
+        fields: service,
         active: service,
         type: service.type
     }),
-    addButtonClick: value => state => ({
-        active: {},
-        isPaneActive: !state.isPaneActive
-    }),
-    editButtonClick: value => state => ({
-        isPaneActive: true
-    }),
+    resetFields: value => state => ({fields: {}}),
+    addButtonClick: value => (state, actions) => {
+        return ({
+            inputMode: state.inputModes[0],
+            isButtonDisabled: true,
+            fields: state.isPaneActive ? state.fields : {},
+            isPaneActive: !state.isPaneActive
+        })
+    },
+    editButtonClick: value => state => {
+        const password = ipcRenderer.sendSync('retrievePassword', state.active)
+        const fields = state.active
+        fields.password = password
+        return ({
+            inputMode: state.inputModes[1],
+            isButtonDisabled: false,
+            fields: fields,
+            isPaneActive: true
+        })
+    },
     deploy: value => (state, actions) => {
         console.log(state.active)
         const password = ipcRenderer.sendSync('retrievePassword', state.active)
@@ -69,9 +100,9 @@ export const actions = {
         const fields = form.querySelectorAll(`[required]`)
         const invalidated = Array.from(fields).filter(field => !field.checkValidity())
         // Make sure we update the relative field for the active state as well, otherwise the input freezes
-        state.active[e.target.getAttribute('name')] = e.target.value
+        state.fields[e.target.getAttribute('name')] = e.target.value
         return ({
-            active: state.active,
+            fields: state.fields,
             isButtonDisabled: invalidated.length > 0 ? true : false
         })
     },
