@@ -6,14 +6,15 @@ let vue
 
 class FTP {
 
-    constructor(actions, service, password) {
+    constructor(actions, service, project, password) {
         const Client = require('ftp')
         this.client = new Client()
         this.actions = actions
         this.credentials = service
+        this.project = project
         this.credentials.password = password
 
-        console.log(this.credentials)
+        console.log(this.credentials, this.project)
         this.client.on('ready', this.ready.bind(this))
         this.client.on('error', this.error.bind(this))
     }
@@ -50,7 +51,7 @@ class FTP {
 
     readDirectory() {
         return new Promise((resolve, reject) => {
-            dir.paths(`${this.credentials.path}/build/`, (err, paths) => {
+            dir.paths(`${this.project.path}/build/`, (err, paths) => {
                 if (err) {
                     const title = `FTP failed for ${this.credentials.title}`
                     const message = err.message
@@ -64,7 +65,7 @@ class FTP {
     createDirectories(dirs) {
         const dirsToCreate = dirs.map(dir => {
             return new Promise((resolve, reject) => {
-                this.client.mkdir(dir.replace(`${this.credentials.path}/build/`, ''), true, err => {
+                this.client.mkdir(dir.replace(`${this.project.path}/build/`, ''), true, err => {
                     if (err) {
                         const title = `FTP failed for ${this.credentials.title}`
                         const message = err.message
@@ -80,7 +81,7 @@ class FTP {
     uploadFiles(files) {
         const filesToPut = files.map(file => {
             return new Promise((resolve, reject) => {
-                const dest = file.replace(`${this.credentials.project.path}/build/`, '')
+                const dest = file.replace(`${this.project.path}/build/`, '')
                 this.client.put(file, dest, err => {
                     if (err) {
                         const title = `FTP failed for ${this.credentials.title}`

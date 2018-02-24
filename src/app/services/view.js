@@ -22,10 +22,10 @@ const view = (state, actions) => {
                 addButtonClick={e => actions.addButtonClick()}
                 isPaneActive={state.isPaneActive}
                 project={state.project} />
-            <div class="services body">
+            <div class="services body" onclick={e => actions.unsetActive()}>
                 <Table cols={['Title', 'Type']}>
                     {state.items.map(service => (
-                        <li onclick={e => actions.setActive(service)}
+                        <li onclick={e => actions.setActive({e, service})}
                         class={service == state.active ? 'service is-active' : 'service'}>
                             <span class="title">{service.title}</span>
                             <span class="type">{service.type}</span>
@@ -33,8 +33,9 @@ const view = (state, actions) => {
                     ))}
                 </Table>
             </div>
-            <ActionBar state={state} actions={actions} />
-            <ActivityBar message={state.isActivity} />
+            <ActionBar state={state} actions={actions}>
+                <ActivityBar message={state.isActivity} />
+            </ActionBar>
             <SlidePane isPaneActive={state.isPaneActive}>
                 <span class={state.inputMode == state.inputModes[0] ? `visible` : `hidden`}>
                     <label>Choose a service</label>
@@ -57,4 +58,8 @@ app.setService('FTP')
 // Listen for updates from the main process
 ipcRenderer.on('getServicesForProject', (e, id) => {
     app.load(id)
+})
+
+ipcRenderer.on('removeProject', (e, id) => {
+    app.removeProject(id)
 })

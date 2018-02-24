@@ -1,6 +1,6 @@
 import { setAllProjects } from '../persist'
-
-const { ipcRenderer } = require('electron')
+import { ipcRenderer }  from 'electron'
+import { Project } from './models'
 
 export const actions = {
     load: value => state => ({
@@ -9,13 +9,14 @@ export const actions = {
     add: project => state => {
         const items = state.items.concat(project)
         setAllProjects(items)
-        ipcRenderer.send('createCompiler', project[0])
+        ipcRenderer.send('createCompiler', project)
         return ({ items })
     },
-    remove: value => state => {
-        const index = state.items.indexOf(value)
+    remove: project => state => {
+        const index = state.items.indexOf(project)
         state.items.splice(index, 1)
         setAllProjects(state.items)
+        ipcRenderer.send('removeProject', project)
         return ({ items: state.items })
     },
     unblock: project => state => { console.log(`unblocking, ${project.name}`)
@@ -34,6 +35,9 @@ export const actions = {
         setAllProjects(items)
         return ({ items })
     },
+    startServer: project => state => {
+        ipcRenderer.send('startServer', project)
+    },
     addCompiling: id => state => {
         const project = state.items.find(
             item => item.id == id
@@ -51,5 +55,27 @@ export const actions = {
             item => item != project.name
         )
         return ({ compiling })
+    },
+    drag: {
+        enter: e => state => ({ isBusy: true, isActive: true }),
+        drop: root_actions => (state, actions) => {
+            const files = event.dataTransfer.files
+            Object.keys(files).forEach(file => {
+                const project = Project(files[file].path)
+                root_actions.add(project)
+            })
+            return ({ isBusy: false, isActive: false })
+        },
+        end: e => state => ({ isBusy: false, isActive: false }),
+        over: e => state => {
+            e.dataTransfer.dropEffect = 'move'
+            e.preventDefault()
+        },
+        leave: e => state => {
+            if (!state.isBusy) {
+                return ({ isActive: false })
+            }
+            return ({ isBusy: false })
+        }
     }
 }

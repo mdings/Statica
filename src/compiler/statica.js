@@ -49,7 +49,6 @@ module.exports = class Compiler {
     }
 
     trigger(e, ctx, args) {
-        console.log(events[e])
         if (events[e]) {
             events[e].call(ctx, args)
         }
@@ -146,6 +145,8 @@ module.exports = class Compiler {
     change(filename) {
         if (!this.ready) return
 
+        console.log('triggering change')
+
         let filesToRender
         const parseFile = path.parse(filename)
 
@@ -224,6 +225,7 @@ module.exports = class Compiler {
     }
 
     destroy() {
+        console.log('destroying the compiler successfully')
         this.watcher.close()
         delete this
     }

@@ -1,5 +1,4 @@
 %input {
-
     transition: background-color 150ms ease-in-out;
     padding: 0 8px;
     height: 26px;
@@ -11,7 +10,6 @@
     outline: 0;
 
     &:focus {
-
         background-color: #fff;
         border-color: #6db3fd;
         box-shadow: 2px 2px 0 #6db3fd,
@@ -22,23 +20,20 @@
 }
 
 %button {
-
     @extend %input;
     background-color: #fff;
+    line-height: 1;
 
     &:hover {
-
         border: 1px solid #E8EAEA;
     }
 
     &:active {
-
         background-color: #ddd;
         background-image: none;
     }
 
     &:focus {
-
         border: 1px solid #E8EAEA;
         box-shadow: none;
     }

@@ -29,9 +29,40 @@ body {
     height: 100vh;
     overflow: auto;
     display: flex;
+    position: relative;
 
     & > * {
         width: 100vw;
+    }
+
+    .is-dragging & {
+
+        &:before {
+            z-index: 888;
+            display: block;
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(#fff, .9);
+        }
+
+        &:after {
+            z-index: 999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            content: attr(data-hint);
+            position: absolute;
+            border-radius: 35px;
+            top: 25px;
+            left: 25px;
+            right: 25px;
+            bottom: 25px;
+            border: 3px dashed #001021;
+        }
     }
 }
 
@@ -68,12 +99,31 @@ ul, li {
     font-size: 12px;
     border-radius: 10px;
     margin: 9px 0;
+    left: 50%;
+    transform: translateX(-50%);
 }
 
 .visible {
-    display: block;
+    display: block!important;
+}
+
+.visible--flex {
+    display: flex!important;
+}
+
+.visible--inline {
+    display: inline-block;
 }
 
 .hidden {
-    display: none;
+    display: none!important;
+}
+
+.projects {
+
+    ul {
+        li:last-child {
+            border-bottom: none;
+        }
+    }
 }

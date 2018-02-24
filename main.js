@@ -27,16 +27,18 @@ app.on('ready', () => {
 
     bw.projects = new BrowserWindow({
         maximizable: false,
-        width: 320,
-        height: 500,
+        minWidth: 300,
+        maxWidth: 450,
+        minHeight: 350,
         frame: false,
         titleBarStyle: 'hiddenInset',
         show: true,
     })
 
     bw.deployers = new BrowserWindow({
-        width: 500,
-        height: 500,
+        minWidth: 300,
+        maxWidth: 450,
+        minHeight: 350,
         minimizable: false,
         maximizable: false,
         frame: false,
@@ -72,6 +74,15 @@ app.on('ready', () => {
             bw.deployers.hide()
             e.preventDefault()
         }
+    })
+
+    // Prevent windows from navigation away on drag&drop
+    bw.projects.webContents.on('will-navigate', e => {
+        e.preventDefault()
+    })
+
+    bw.deployers.webContents.on('will-navigate', e => {
+        e.preventDefault()
     })
 
     bw.deployers.on('move', e => updateBounds('deployers'))
@@ -112,10 +123,17 @@ ipcMain.on('setIsCompiling', (e, project) => {
 })
 
 ipcMain.on('setIsCompilingSuccess', (e, project) => {
-    console.log('SET COMPILING SUCCESS')
     bw.projects.webContents.send('setIsCompilingSuccess', project)
 })
 
+ipcMain.on('startServer', (e, {id}) => {
+    bw.worker.webContents.send('startServer', id)
+})
+
+ipcMain.on('removeProject', (e, {id}) => {
+    bw.worker.webContents.send('removeProject', id)
+    bw.deployers.webContents.send('removeProject', id)
+})
 // ipcMain.on('removeCompiler', (e, project) => {
 //     bw.worker.webContents.send('removeCompiler', project.id)
 // })

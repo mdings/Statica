@@ -1,4 +1,4 @@
-import { project } from './models'
+import { Project } from './models'
 
 const electron = require('electron')
 const remote = electron.remote
@@ -14,8 +14,8 @@ export const openDialog = actions => {
         if (filePaths) {
             const folder = filePaths[0]
             if (fs.lstatSync(folder).isDirectory()) {
-                const object = project(folder)
-                actions.add([object])
+                const project = Project(folder)
+                actions.add(project)
             }
         }
     })
@@ -27,7 +27,7 @@ export const openMenu = (actions, project) => {
         click() { console.log(actions )}
     }, {
         label: 'Open page',
-        click() { console.log(actions )}
+        click() { actions.startServer(project) }
     }, {
         type: 'separator'
     }, {

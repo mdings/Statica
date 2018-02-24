@@ -1,10 +1,11 @@
 import '../sass/components/titlebar.scss'
 import '../sass/components/project.scss'
 import '../sass/components/statusbar.scss'
+import '../sass/components/loader.scss'
 
 import { h } from 'hyperapp'
 
-export const Titlebar = ({openDialog}) => (
+export const Titlebar = ({openDialog, search}) => (
     <header>
         <button onclick={openDialog}>
             <svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
@@ -16,8 +17,14 @@ export const Titlebar = ({openDialog}) => (
 
 export const StatusBar = ({state}) => (
     <footer>
-        Watching {state.items.length} folders
-        compiling {state.compiling.join(',')}
+        <div>
+            {state.items.length} folder
+            <span class={state.items.length == 1 ? `hidden` : `visible--inline`}>s</span>
+        </div>
+        <div class={state.compiling.length > 0 ? `status visible--flex` : `status`}>
+            <span>{state.compiling.join(',')}</span>
+            <span class="loader"></span>
+        </div>
     </footer>
 )
 

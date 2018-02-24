@@ -24,8 +24,8 @@ ipcRenderer.on('optimizeProject', (e, id) => {
 })
 
 ipcRenderer.on('createCompiler', (e, project) => {
+    compilers[project.id] = new Statica(project)
     let compiler = compilers[project.id]
-    compiler = new Statica(project)
     compiler.on('ready', project => {
         ipcRenderer.send('createCompilerComplete', project)
     })
@@ -40,21 +40,17 @@ ipcRenderer.on('createCompiler', (e, project) => {
     })
 })
 
-ipcRenderer.on('removeCompiler', (e, id) => {
-    // find the project from the array
-    const compiler = compilers.find(item => item.project.id == id)
-
-    if (compiler) {
-        compiler.destroy()
+ipcRenderer.on('removeProject', (e, id) => {
+    if (compilers[id]) {
+        compilers[id].destroy()
+        delete compilers[id]
     }
 })
 
 ipcRenderer.on('startServer', (e, id) => {
-    // find the project from the array
-    const compiler = compilers.find(item => item.project.id == id)
-
-    if (compiler) {
-        compiler.launch()
+    console.log('starting', compilers[id])
+    if (compilers[id]) {
+        compilers[id].launch()
     }
 })
 

@@ -1,5 +1,3 @@
-@import "../elements/inputs";
-
 header {
     width: 100%;
     -webkit-app-region: drag;
@@ -46,5 +44,9 @@ header {
         position: absolute;
         left: 50%;
         transform: translateX(-50%);
+        max-width: calc(100vw - 150px);
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        overflow: hidden;
     }
 }

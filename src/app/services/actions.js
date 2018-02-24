@@ -1,6 +1,5 @@
 import id from 'shortid'
 import { ipcRenderer } from 'electron'
-import { Service } from './models'
 import { getProjectById, setServicesByProjectId } from '../persist'
 
 import FTP from './ftp'
@@ -16,6 +15,7 @@ export const actions = {
             active: null,
             isButtonDisabled: true,
             isPaneActive: false,
+            isActionsPanelActive: false,
             project: project,
             items: project.services
         })
@@ -38,7 +38,7 @@ export const actions = {
         if (state.project) {
             const isPasswordSet = ipcRenderer.sendSync('storePassword', state.fields)
             const items = state.items.map(
-                item => item.id == state.fields.id ? state.fields : items
+                item => item.id == state.fields.id ? state.fields : state.items
             )
             if (isPasswordSet) {
                 setServicesByProjectId(state.project.id, items)
@@ -51,9 +51,17 @@ export const actions = {
         state.items.splice(index, 1)
         setServicesByProjectId(state.project.id, state.items)
         return ({
+            isActionsPanelActive: state.items.length > 0 && state.active,
             active: null,
             items: state.items
         })
+    },
+    removeProject: id => state => {
+        // The project was removed in the main window, so close the services window for it if opened
+        if (state.project.id == id) {
+            const win = require('electron').remote.getCurrentWindow()
+            win.close()
+        }
     },
     setService: value => state => {
         // const select = e.target
@@ -64,10 +72,18 @@ export const actions = {
             type: value
         })
     },
-    setActive: service => state => ({
-        fields: service,
-        active: service,
-        type: service.type
+    setActive: ({e, service}) => state => {
+        e.stopPropagation()
+        return ({
+            isActionsPanelActive: true,
+            fields: service,
+            active: service,
+            type: service.type
+        })
+    },
+    unsetActive: value => state => ({
+        isActionsPanelActive: false,
+        active: null
     }),
     resetFields: value => state => ({fields: {}}),
     addButtonClick: value => (state, actions) => {
@@ -90,10 +106,12 @@ export const actions = {
         })
     },
     deploy: value => (state, actions) => {
-        console.log(state.active)
         const password = ipcRenderer.sendSync('retrievePassword', state.active)
-        const exporter = new exporters[state.active.type](actions, state.active, password)
+        const exporter = new exporters[state.active.type](actions, state.active, state.project, password)
         exporter.run()
+        return ({
+            isActionsPanelActive: false
+        })
     },
     checkValidity: e => state => {
         const form = e.target.parentNode
@@ -110,6 +128,7 @@ export const actions = {
         isActivity: value
     }),
     hideActivity: value => state => ({
-        isActivity: null
+        isActivity: null,
+        isActionsPanelActive: true
     })
 }

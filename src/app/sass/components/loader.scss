@@ -1,0 +1,21 @@
+.loader {
+    display: block;
+    position: relative;
+    width: 18px;
+    height: 18px;
+    opacity: 1;
+    transform-origin: 50% 50%;
+    transition: all 100ms ease-in;
+
+    &:before {
+        animation: spin 500ms linear infinite;
+        border-radius: 50%;
+        border: 1px solid #ccc;
+        border-top-color: $color-blue;
+        display: block;
+        content: '';
+        position: absolute;
+        width: 100%;
+        height: 100%;
+    }
+}

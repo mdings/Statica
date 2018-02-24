@@ -1,7 +1,7 @@
 const path = require('upath')
 const id = require('shortid')
 
-export const project = folder => ({
+export const Project = folder => ({
     id: id.generate(),
     name: path.basename(folder),
     favourite: false,

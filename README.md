@@ -16,3 +16,6 @@ HOME=~/.electron-gyp ./node_modules/node-gyp/bin/node-gyp.js rebuild --target=1.
 
 The output will be inside `build/Release/binding.node`. Copy that file into our `node_modules/node-sass/vendor/darwin-x64-49` folder. Not that the darwin-x64-49 name should match our environment. Electron will thrown an error stating which folder it is expecting the binding file, so look for that if you're not sure which environment we're running on.
 
+## Icons
+Icons are from the Material Core
+Link: http://bit.ly/ZrkDJq

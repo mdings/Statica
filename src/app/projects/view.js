@@ -1,4 +1,5 @@
 import '../sass/reset.scss'
+
 import { h, app as _app } from 'hyperapp'
 
 import { actions } from './actions'
@@ -18,12 +19,21 @@ const otherProjects = state => {
 }
 
 const view = (state, actions) => (
-    <div class="window">
+    <div class={state.drag.isActive ? `window is-dragging` : `window`}
+        ondragenter={e => actions.drag.enter(e)}
+        ondrop={e => actions.drag.drop(actions)}
+        ondragend={e => actions.drag.end(e)}
+        ondragover={e => actions.drag.over(e)}
+        ondragleave={e => actions.drag.leave(e)}>
         <Titlebar openDialog={e => openDialog(actions)}/>
         <div class={state.isMessage ? 'message visible' : 'message hidden'}>There is an update available. Click to restart</div>
-        <div class="body">
-            <div class={state.items.length > 0 ? 'projects visible' : 'projects hidden'}>
-                <div class={favProjects(state).length > 0 ? 'divider visible' : 'divider hidden'}>
+        <div class="body" data-hint="Drop your folder here">
+            <div class={state.items.length > 0
+                    ? 'projects visible'
+                    : 'projects hidden'}>
+                <div class={favProjects(state).length > 0
+                    ? 'divider visible'
+                    : 'divider hidden'}>
                     <span class="sticky-label">Favourites</span>
                     <ul class="projects--favourite">
                         {favProjects(state).map(project => (
@@ -31,8 +41,12 @@ const view = (state, actions) => (
                         ))}
                     </ul>
                 </div>
-                <div class={(otherProjects(state).length) > 0 ? 'divider visible' : 'divider hidden'}>
-                    <span class="sticky" class={(favProjects(state).length) > 0 ? 'sticky-label visible' : 'hidden'}>Others</span>
+                <div class={(otherProjects(state).length) > 0
+                    ? 'divider visible'
+                    : 'divider hidden'}>
+                    <span class="sticky" class={(favProjects(state).length) > 0
+                        ? 'sticky-label visible--inline'
+                        : 'hidden'}>Others</span>
                     <ul>
                         {otherProjects(state).map(project => (
                             <Project openMenu={e => openMenu(actions, project)} project={project} toggleFav={actions.toggleFav} />
@@ -40,7 +54,9 @@ const view = (state, actions) => (
                     </ul>
                 </div>
             </div>
-            <div class={state.items.length > 0 ? 'empty-state hidden' : 'empty-state visible'}>
+            <div class={state.items.length > 0
+                ? 'empty-state hidden'
+                : 'empty-state visible'}>
                 There a no projects yet. Click the '+' to add a new folder or drag and drop one in the projects area.
             </div>
         </div>

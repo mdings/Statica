@@ -3,20 +3,30 @@
     li {
         display: flex;
         justify-content: space-between;
+        padding: 4px 8px;
+        font-size: 14px;
 
         &:first-child {
+            font-size: 13px;
             border-bottom: 1px solid #f1f1f1;
         }
 
         &.is-active {
-            background-color: $color-blue;
+            // background-color: #CFDEE7;
+            background-color: #C1CFDA;
         }
 
         span {
 
+            &:first-child {
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                margin-right: 10px;
+            }
+
             &:last-child {
-                width: 40%;
-                min-width: 200px;
+                flex: 0 0 120px;
             }
         }
     }

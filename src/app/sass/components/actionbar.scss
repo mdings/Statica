@@ -1,21 +1,65 @@
 .actionbar {
-    background-color: #fff;
     z-index: 9;
     flex-shrink: 0;
-    flex-grow: 0;
-    display: flex;
-    height: 40px;
-    border-top: 1px solid #f1f1f1;
-    align-items: center;
+    flex-grow: 1;
+    margin-bottom: 0;
+    position: relative;
+    transition: margin 350ms cubic-bezier(0.77, 0, 0.175, 1);
+
+    ul {
+        position: relative;
+        z-index: 10;
+        border-top: 1px solid #f1f1f1;
+        height: 35px;
+        background-color: #fff;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
 
     li {
-        text-align: center;
-        width: (100/3)*1%
+        @extend %button;
+        border: 1px solid transparent;
+        display: inline-flex;
+        margin: 0 8px;
+        justify-content: center;
+        align-items: center;
+        width: 75px;
+
+        svg {
+            // sneakily overrule the color :)
+            g[fill="#000000"] {
+                fill: #222;
+            }
+        }
+        &:nth-child(1) {
+            svg {
+                height: 4px;
+                width: auto
+            }
+        }
+
+        &:nth-child(2) {
+            svg {
+                height: 12px;
+                width: auto
+            }
+        }
+
+        &:nth-child(3) {
+            svg {
+                height: 12px;
+                width: auto
+            }
+        }
     }
+
+
 
     &.is-disabled {
         pointer-events: none;
         position: relative;
+        margin-bottom: -35px;
 
         &:after {
             display: block;
