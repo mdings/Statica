@@ -15,7 +15,6 @@ export const actions = {
             active: null,
             isButtonDisabled: true,
             isPaneActive: false,
-            isActionsPanelActive: false,
             project: project,
             items: project.services
         })
@@ -51,7 +50,6 @@ export const actions = {
         state.items.splice(index, 1)
         setServicesByProjectId(state.project.id, state.items)
         return ({
-            isActionsPanelActive: state.items.length > 0 && state.active,
             active: null,
             items: state.items
         })
@@ -75,14 +73,12 @@ export const actions = {
     setActive: ({e, service}) => state => {
         e.stopPropagation()
         return ({
-            isActionsPanelActive: true,
             fields: service,
             active: service,
             type: service.type
         })
     },
     unsetActive: value => state => ({
-        isActionsPanelActive: false,
         active: null
     }),
     resetFields: value => state => ({fields: {}}),
@@ -110,7 +106,7 @@ export const actions = {
         const exporter = new exporters[state.active.type](actions, state.active, state.project, password)
         exporter.run()
         return ({
-            isActionsPanelActive: false
+            isExporting: true
         })
     },
     checkValidity: e => state => {
@@ -129,6 +125,6 @@ export const actions = {
     }),
     hideActivity: value => state => ({
         isActivity: null,
-        isActionsPanelActive: true
+        isExporting: false
     })
 }

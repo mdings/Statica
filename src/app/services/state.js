@@ -16,7 +16,7 @@ export const state = {
     inputMode: inputModes[0],
     project: null,
     type: null,
-    isActionsPanelActive: true,
+    isExporting: false,
     isPaneActive: false,
     isButtonDisabled: true,
     isActivity: null,
