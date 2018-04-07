@@ -81,7 +81,7 @@
     "imagemin": "^5.3.1",
     "imagemin-jpegtran": "^5.0.2",
     "imagemin-pngquant": "^5.0.1",
-    "keytar": "^4.0.5",
+    "keytar": "^4.2.0",
     "less": "^2.7.3",
     "markdown-it": "^8.4.0",
     "node-dir": "^0.1.17",
